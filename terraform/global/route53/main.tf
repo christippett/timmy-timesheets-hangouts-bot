@@ -47,7 +47,7 @@ resource "aws_route53_record" "apig" {
 }
 
 resource "aws_api_gateway_base_path_mapping" "apig" {
-  api_id      = "sdr1ekqn43"
+  api_id      = "${data.aws_api_gateway_rest_api.my_rest_api.id}"
   stage_name  = ""
   domain_name = "${aws_api_gateway_domain_name.apig.domain_name}"
 }
