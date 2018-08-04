@@ -15,6 +15,17 @@ provider "aws" {
     profile = "team2servian"
 }
 
+
+# DELETED FROM KMS block - 2 missing
+
+# "${data.terraform_remote_state.dynamodb.dynamodb_team2_user_register_kms_key_arn}",
+# "${data.terraform_remote_state.sqs.sqs_kms_key_arn}",
+# "${data.terraform_remote_state.sqs.sqs_ssm_kms_key_arn}",
+# "${data.terraform_remote_state.kms.s3_kms_key_arn}",
+# "${data.terraform_remote_state.s3.s3_ssm_kms_key_arn}",
+# "${data.terraform_remote_state.ssm.google_auth_client_secret_kms_key_arn}",
+# "${data.terraform_remote_state.ssm.google_auth_service_account_kms_key_arn}"
+
 resource "aws_iam_role" "timesheets_lambda" {
     name = "team2-timesheets-lambda-role"
     force_detach_policies = true
@@ -61,13 +72,7 @@ resource "aws_iam_policy" "timesheets_lambda" {
                 "kms:Decrypt"
             ],
             "Resource": [
-                "${data.terraform_remote_state.dynamodb.dynamodb_team2_user_register_kms_key_arn}",
-                "${data.terraform_remote_state.sqs.sqs_kms_key_arn}",
-                "${data.terraform_remote_state.sqs.sqs_ssm_kms_key_arn}",
-                "${data.terraform_remote_state.kms.s3_kms_key_arn}",
-                "${data.terraform_remote_state.s3.s3_ssm_kms_key_arn}",
-                "${data.terraform_remote_state.ssm.google_auth_client_secret_kms_key_arn}",
-                "${data.terraform_remote_state.ssm.google_auth_service_account_kms_key_arn}"
+                "*"
             ]
         },
         {
