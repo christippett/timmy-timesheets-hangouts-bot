@@ -24,10 +24,10 @@ coverage.xml
 **/.chalice/venv/
 
 # Artifacts
-/build/
-/dist/
-/docs/_build/
-/htmlcov/
+build/
+dist/
+docs/_build/
+htmlcov/
 
 # JS
 node_modules/
