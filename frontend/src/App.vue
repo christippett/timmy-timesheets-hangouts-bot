@@ -47,7 +47,4 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
 }
-img.logo {
-  max-height: 1rem;
-}
 </style>

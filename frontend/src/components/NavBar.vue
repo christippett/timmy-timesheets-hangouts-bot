@@ -45,3 +45,9 @@ export default {
   }
 }
 </script>
+
+<style>
+img.logo {
+  max-height: 1rem;
+}
+</style>
