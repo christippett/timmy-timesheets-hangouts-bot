@@ -7,6 +7,24 @@ data "terraform_remote_state" "shared" {
     }
 }
 
+data "terraform_remote_state" "dynamodb" {
+    backend = "s3"
+    config {
+        bucket              = "team2-terralock"
+        key                 = "Team2/terraform/service/dynamodb/terraform.tfstate"
+        region              = "ap-southeast-2"
+    }
+}
+
+data "terraform_remote_state" "sqs" {
+    backend = "s3"
+    config {
+        bucket              = "team2-terralock"
+        key                 = "Team2/terraform/service/sqs/terraform.tfstate"
+        region              = "ap-southeast-2"
+    }
+}
+
 data "terraform_remote_state" "kms" {
     backend = "s3"
     config {
@@ -16,11 +34,12 @@ data "terraform_remote_state" "kms" {
     }
 }
 
-data "terraform_remote_state" "iam" {
+data "terraform_remote_state" "s3" {
     backend = "s3"
     config {
         bucket              = "team2-terralock"
-        key                 = "Team2/terraform/global/iam/terraform.tfstate"
+        key                 = "Team2/terraform/global/S3/terraform.tfstate"
         region              = "ap-southeast-2"
     }
 }
+

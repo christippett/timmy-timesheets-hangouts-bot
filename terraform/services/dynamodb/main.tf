@@ -19,14 +19,60 @@ resource "aws_dynamodb_table" "user_register" {
     name           = "team2-user-register"
     read_capacity  = 20
     write_capacity = 20
-    hash_key       = "UserId"
+    hash_key       = "id"
+
+    # NOTE: hash of email address is the id 
 
     # As this table is for storing registration details per user
     # including hashed credentials there is no real need for 
     # a range key or global or local secondary indexes
 
     attribute {
-        name = "UserId"
+        name = "id"
+        type = "S"
+    }
+
+    server_side_encryption {
+        enabled = "true"
+    }
+
+    tags = "${data.terraform_remote_state.shared.global_tags}"
+}
+
+resource "aws_dynamodb_table" "user" {
+    name           = "team2-user"
+    read_capacity  = 20
+    write_capacity = 20
+    hash_key       = "name"
+
+    # As this table is for storing registration details per user
+    # including hashed credentials there is no real need for 
+    # a range key or global or local secondary indexes
+
+    attribute {
+        name = "name"
+        type = "S"
+    }
+
+    server_side_encryption {
+        enabled = "true"
+    }
+
+    tags = "${data.terraform_remote_state.shared.global_tags}"
+}
+
+resource "aws_dynamodb_table" "space" {
+    name           = "team2-space"
+    read_capacity  = 20
+    write_capacity = 20
+    hash_key       = "name"
+
+    # As this table is for storing registration details per user
+    # including hashed credentials there is no real need for 
+    # a range key or global or local secondary indexes
+
+    attribute {
+        name = "name"
         type = "S"
     }
 
@@ -41,6 +87,6 @@ module "ssm_outputs_dynamoddb_user_register" {
     source                      = "../../modules/ssm"
     service_name                = "team2-dynamodb-table-user-register"
     qualified_path_to_outputs   = "/team2/service/dynamodb/dynamodb_terraform_outputs"
-    terraform_outputs           = "${map("team2-user-register-arn", aws_dynamodb_table.user_register.arn, "team2-user-register-id", aws_dynamodb_table.user_register.id)}"
+    terraform_outputs           = "${map("team2-user-register-arn", aws_dynamodb_table.user_register.arn, "team2-user-register-id", aws_dynamodb_table.user_register.id, "team2-user-arn", aws_dynamodb_table.user.arn, "team2-user-id", aws_dynamodb_table.user.id, "team2-space-arn", aws_dynamodb_table.space.arn, "team2-space-id", aws_dynamodb_table.space.id)}"
     global_tags                 = "${data.terraform_remote_state.shared.global_tags}"
 }

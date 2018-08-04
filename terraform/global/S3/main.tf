@@ -32,6 +32,52 @@ resource "aws_s3_bucket" "website" {
     }
 }
 
+resource "aws_s3_bucket_policy" "website" {
+    bucket = "${aws_s3_bucket.website.id}"
+
+    policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+
+            "Sid": "AllowLambdaToListBucket",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS" : ["${data.terraform_remote_state.iam.timesheets_lambda_role_arn}"]
+            },
+            "Action": [ 
+                "s3:ListBucket"
+            ],
+            "Resource": "${aws_s3_bucket.website.arn}"
+        },
+        {
+            "Sid":"PublicReadGetObject",
+            "Effect":"Allow",
+            "Principal": "*",
+            "Action":[
+                "s3:GetObject"
+            ],
+            "Resource": "${aws_s3_bucket.website.arn}/*"
+        },
+        {
+            "Sid": "AllowLambdaToUpdateBucket",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS" : ["${data.terraform_remote_state.iam.timesheets_lambda_role_arn}"]
+            },
+            "Action": [
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": "${aws_s3_bucket.website.arn}/*"
+        }
+    ]
+}
+POLICY
+}
+
+
 resource "aws_s3_bucket" "app" {
     # TODO: Change name to mapped route53 domain
     bucket                  = "team2-app-servian"
@@ -54,6 +100,41 @@ resource "aws_s3_bucket" "app" {
     }
 }
 
+resource "aws_s3_bucket_policy" "app" {
+    bucket = "${aws_s3_bucket.app.id}"
+
+    policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+
+            "Sid": "AllowLambdaToListBucket",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS" : ["${data.terraform_remote_state.iam.timesheets_lambda_role_arn}"]
+            },
+            "Action": [ 
+                "s3:ListBucket"
+            ],
+            "Resource": "${aws_s3_bucket.app.arn}"
+        },
+        {
+            "Sid": "AllowLambdaToUpdateBucket",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS" : ["${data.terraform_remote_state.iam.timesheets_lambda_role_arn}"]
+            },
+            "Action": [
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": "${aws_s3_bucket.app.arn}/*"
+        }
+    ]
+}
+POLICY
+}
 
 module "ssm_kms_s3" {
     source                      = "../../modules/ssm"

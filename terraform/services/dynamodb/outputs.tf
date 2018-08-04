@@ -10,6 +10,22 @@ output "dynamodb_team2_user_register_id" {
     value = "${aws_dynamodb_table.user_register.id}"
 }
 
+output "dynamodb_team2_user_arn" {
+    value = "${aws_dynamodb_table.user.arn}"
+}
+
+output "dynamodb_team2_user_id" {
+    value = "${aws_dynamodb_table.user.id}"
+}
+
+output "dynamodb_team2_space_arn" {
+    value = "${aws_dynamodb_table.space.arn}"
+}
+
+output "dynamodb_team2_space_id" {
+    value = "${aws_dynamodb_table.space.id}"
+}
+
 ###########################################################
 
 # KMS
