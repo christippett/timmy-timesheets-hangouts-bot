@@ -43,3 +43,11 @@ data "terraform_remote_state" "s3" {
     }
 }
 
+data "terraform_remote_state" "ssm" {
+    backend = "s3"
+    config {
+        bucket              = "team2-terralock"
+        key                 = "Team2/terraform/global/ssm/terraform.tfstate"
+        region              = "ap-southeast-2"
+    }
+}
