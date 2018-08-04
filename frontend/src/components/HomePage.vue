@@ -1,11 +1,7 @@
 <template>
   <div class="container has-text-centered">
     <div class="columns is-vcentered">
-      <div class="column is-5">
-        <figure class="image is-square">
-          <img src="../assets/timmy.png" alt="Description">
-        </figure>
-      </div>
+      <mascot class="column is-5"></mascot>
       <div class="column is-6 is-offset-1">
         <h1 class="title is-2">
           Timmy Timesheets
@@ -25,12 +21,17 @@
 </template>
 
 <script>
+import Mascot from '@/components/Mascot'
+
 export default {
   name: 'HelloWorld',
   data () {
     return {
       msg: 'Welcome to Your Vue.js App'
     }
+  },
+  components: {
+    Mascot
   }
 }
 </script>

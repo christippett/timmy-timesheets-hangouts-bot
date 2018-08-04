@@ -48,6 +48,6 @@ export default {
 
 <style>
 img.logo {
-  max-height: 1rem;
+  max-height: 1rem !important;
 }
 </style>

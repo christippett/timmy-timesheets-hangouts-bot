@@ -1,11 +1,7 @@
 <template>
   <div class="container has-text-centered">
     <div class="columns is-vcentered">
-      <div class="column is-5">
-        <figure class="image is-square">
-          <img src="../assets/timmy.png" alt="Description">
-        </figure>
-      </div>
+      <mascot class="column is-5"></mascot>
       <div class="column is-6 is-offset-1">
         <h1 class="title is-2">
           Configure TimePro
@@ -24,7 +20,7 @@
             </b-input>
           </b-field>
           <div class="control">
-            <button class="button is-primary">Submit</button>
+            <button class="button is-primary" @click="checkForm" v-bind:class="{ 'is-loading': formLoading }">Submit</button>
           </div>
         </section>
       </div>
@@ -33,6 +29,8 @@
 </template>
 
 <script>
+import Mascot from '@/components/Mascot'
+
 export default {
   name: 'RegisterConfig',
   beforeCreate: function () {
@@ -44,8 +42,17 @@ export default {
   },
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      msg: 'Welcome to Your Vue.js App',
+      formLoading: false
     }
+  },
+  methods: {
+    checkForm: function () {
+      this.formLoading = !this.formLoading
+    }
+  },
+  components: {
+    Mascot
   }
 }
 </script>

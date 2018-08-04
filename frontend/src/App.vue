@@ -10,14 +10,8 @@
       </div>
 
       <div class="hero-foot">
-        <div class="container">
-          <div class="tabs is-centered">
-            <ul>
-              <li>
-                <a>Footer</a>
-              </li>
-            </ul>
-          </div>
+        <div class="container is-size-7">
+          <p>Developed by Xavier Clements & Chris Tippett as part of the Melbourne AWS Hackathon.</p>
         </div>
       </div>
     </section>
@@ -46,5 +40,8 @@ export default {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
+}
+.hero-foot {
+  padding: 0.25rem;
 }
 </style>
