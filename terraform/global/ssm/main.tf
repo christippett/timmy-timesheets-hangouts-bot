@@ -17,6 +17,7 @@ provider "aws" {
 
 module "ssm_google_auth_client_secret" {
     source                      = "../../modules/ssm"
+    encode                      = false
     service_name                = "team2-google-auth-client-secret"
     qualified_path_to_outputs   = "/team2/global/ssm/google_auth_client_secret"
     terraform_outputs           = "${map("google_auth_client_secret", file("client_secret.json"))}"
@@ -25,6 +26,7 @@ module "ssm_google_auth_client_secret" {
 
 module "ssm_google_auth_service_account" {
     source                      = "../../modules/ssm"
+    encode                      = false
     service_name                = "team2-google-auth-service_account"
     qualified_path_to_outputs   = "/team2/global/ssm/google_auth_service_account"
     terraform_outputs           = "${map("google_auth_service_account", file("service-account.json"))}"

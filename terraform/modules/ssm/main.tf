@@ -15,7 +15,7 @@ resource "aws_ssm_parameter" "ssm_kms" {
     key_id          = "${module.kms.kms_key_id}"
     type            = "SecureString"
 
-    value           = "${jsonencode(merge(var.terraform_outputs, map("kms_id", module.kms.kms_key_id, "kms_arn", module.kms.kms_key_arn)))}"
+    value           = "${var.encode ? jsonencode(merge(var.terraform_outputs, map("kms_id", module.kms.kms_key_id, "kms_arn", module.kms.kms_key_arn))) : element(values(var.terraform_outputs), 0)}"
 
     tags            = "${merge(var.global_tags, map("Name", coalesce(var.service_name, "-ssm")))}"
 }

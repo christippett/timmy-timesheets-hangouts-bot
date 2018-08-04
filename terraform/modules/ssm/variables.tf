@@ -19,3 +19,10 @@ variable "global_tags" {
     description = "Global tags to be applied"
     type        = "map"
 }
+
+# Defaulted variables
+
+variable "encode" {
+    default = true
+}
+
