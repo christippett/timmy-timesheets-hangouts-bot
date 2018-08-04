@@ -44,9 +44,9 @@ resource "aws_cloudfront_distribution" "website_cdn" {
 
   custom_error_response {
     error_code            = "404"
-    error_caching_min_ttl = "360"
+    error_caching_min_ttl = "0"
     response_code         = "200"
-    response_page_path    = "/error.html"
+    response_page_path    = "/index.html"
   }
 
   default_cache_behavior {

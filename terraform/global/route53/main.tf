@@ -23,3 +23,12 @@ resource "aws_route53_zone" "primary" {
     name = "timesheets.servian.fun"
     tags = "${data.terraform_remote_state.shared.global_tags}"
 }
+
+resource "aws_route53_record" "apig" {
+    name = "api.timesheets.servian.fun"
+    type = "A"
+    zone_id = "${aws_route53_zone.primary.zone_id}"
+    # Hardcoded API Gateway record
+    records = ["https://sdr1ekqn43.execute-api.ap-southeast-2.amazonaws.com"]
+    ttl = 60
+}

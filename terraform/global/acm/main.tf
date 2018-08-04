@@ -32,4 +32,3 @@ module "ssm_acm" {
     terraform_outputs           = "${map("acm-arn", aws_acm_certificate.cert.arn, "acm-id", aws_acm_certificate.cert.id)}"
     global_tags                 = "${data.terraform_remote_state.shared.global_tags}"
 }
-
