@@ -37,7 +37,8 @@ resource "aws_iam_role" "timesheets_lambda" {
         {
             "Action": "sts:AssumeRole",
             "Principal": {
-                "Service": "lambda.amazonaws.com"
+                "Service": "lambda.amazonaws.com",
+                "AWS": ["arn:aws:iam::204449496694:user/team2"]
             },
             "Effect": "Allow",
             "Sid": "LambdaAssumeRole"
@@ -115,6 +116,15 @@ resource "aws_iam_policy" "timesheets_lambda" {
                 "${data.terraform_remote_state.dynamodb.dynamodb_team2_user_arn}",
                 "${data.terraform_remote_state.dynamodb.dynamodb_team2_user_register_arn}",
                 "${data.terraform_remote_state.dynamodb.dynamodb_team2_space_arn}"
+            ]
+        },
+        {
+            "Sid":"AuthorizeAccount",
+            "Effect":"Allow",
+            "Resource":"${data.terraform_remote_state.ses.ses_identity_arn}",
+            "Action":[
+                "SES:SendEmail",
+                "SES:SendRawEmail"
             ]
         }
     ]

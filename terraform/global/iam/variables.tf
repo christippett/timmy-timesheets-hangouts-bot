@@ -51,3 +51,12 @@ data "terraform_remote_state" "ssm" {
         region              = "ap-southeast-2"
     }
 }
+
+data "terraform_remote_state" "ses" {
+    backend = "s3"
+    config {
+        bucket              = "team2-terralock"
+        key                 = "Team2/terraform/service/ses/terraform.tfstate"
+        region              = "ap-southeast-2"
+    }
+}
