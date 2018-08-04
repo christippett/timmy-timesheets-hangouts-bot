@@ -31,11 +31,12 @@ PEOPLE_API_SCOPES = [
 # Get client secret JSON from environment (populated from SSM)
 get_client_secret = lambda: json.loads(
     os.environ.get('google_auth_client_secret'))
+get_cipher_key = lambda: os.environ.get('oath_cipher_key', 'lg8263QX230evwtY0k5ZQzho2Lf9jjqFxQpP4Hk-lXQ=').encode('utf-8')
 
 
 class OAuth2CallbackCipher(object):
     """Handles encryption and decryption of state parameters."""
-    key = b'lg8263QX230evwtY0k5ZQzho2Lf9jjqFxQpP4Hk-lXQ='
+    key = get_cipher_key()
 
     @classmethod
     def get_cipher(cls):
