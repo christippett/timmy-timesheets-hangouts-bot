@@ -8,7 +8,7 @@ from apiclient import discovery
 
 from ssm_parameter_store import EC2ParameterStore
 
-from chalicelib import models, utils, auth
+from chalicelib import models, utils, auth, messages
 
 
 # Logging
@@ -27,12 +27,6 @@ Credentials = credentials.Credentials
 
 # Initiate app
 app = Chalice(app_name='timesheet-bot', debug=True)
-
-# Other constants
-INTERACTIVE_TEXT_BUTTON_ACTION = "doTextButtonAction"
-INTERACTIVE_IMAGE_BUTTON_ACTION = "doImageButtonAction"
-INTERACTIVE_BUTTON_PARAMETER_KEY = "param_key"
-BOT_HEADER = 'Card Bot Python'
 
 
 # Routes
@@ -80,14 +74,14 @@ def bot_event():
             event['type'] == 'ADDED_TO_SPACE' and 'message' in event):
         message_text = event['message']['text']
         if message_text == 'login':
-            resp = on_mention(event)
+            resp = check_user_authenticated(event)
         else:
-            resp = create_card_response(message_text)
+            resp = messages.create_card_response(message_text)
 
     elif event['type'] == 'CARD_CLICKED':
         action_name = event['action']['actionMethodName']
         parameters = event['action']['parameters']
-        resp = respond_to_interactive_card_click(action_name, parameters)
+        resp = messages.respond_to_interactive_card_click(action_name, parameters)
 
     elif event['type'] == 'REMOVED_FROM_SPACE':
         # Delete space from DB
@@ -119,7 +113,7 @@ def oauth2_callback():
         headers={'Location': 'https://timesheets.servian.fun/register/config'})
 
 
-def on_mention(event: dict) -> dict:
+def check_user_authenticated(event: dict) -> dict:
     """Handles a mention from Hangouts Chat."""
     request = app.current_request
     user_name = event['user']['name']
@@ -138,210 +132,6 @@ def on_mention(event: dict) -> dict:
     logging.info('Found existing auth credentials for user %s', user_name)
     return {'text': "You're authenticated and ready to go!"}
     # return produce_profile_message(user_credentials)
-
-
-def create_card_response(event_message):
-    """Creates a card response based on the message sent in Hangouts Chat.
-
-    See the reference for JSON keys and format for cards:
-    https://developers.google.com/hangouts/chat/reference/message-formats/cards
-
-    Args:
-        eventMessage: the user's message to the bot
-
-    """
-
-    response = dict()
-    cards = list()
-    widgets = list()
-    header = None
-
-    words = event_message.lower().split()
-
-    for word in words:
-
-        if word == 'header':
-            header = {
-                'header': {
-                    'title': BOT_HEADER,
-                    'subtitle': 'Card header',
-                    'imageUrl': 'https://goo.gl/5obRKj',
-                    'imageStyle': 'IMAGE'
-                }
-            }
-
-        elif word == 'textparagraph':
-            widgets.append({
-                'textParagraph' : {
-                    'text': '<b>This</b> is a <i>text paragraph</i>.'
-                }
-            })
-
-        elif word == 'keyvalue':
-            widgets.append({
-                'keyValue': {
-                    'topLabel': 'KeyValue Widget',
-                    'content': 'This is a KeyValue widget',
-                    'bottomLabel': 'The bottom label',
-                    'icon': 'STAR'
-                }
-            })
-
-        elif word == 'interactivetextbutton':
-            widgets.append({
-                'buttons': [
-                    {
-                        'textButton': {
-                            'text': 'INTERACTIVE BUTTON',
-                            'onClick': {
-                                'action': {
-                                    'actionMethodName': INTERACTIVE_TEXT_BUTTON_ACTION,
-                                    'parameters': [{
-                                        'key': INTERACTIVE_BUTTON_PARAMETER_KEY,
-                                        'value': event_message
-                                    }]
-                                }
-                            }
-                        }
-                    }
-                ]
-            })
-
-        elif word == 'interactiveimagebutton':
-            widgets.append({
-                'buttons': [
-                    {
-                        'imageButton': {
-                            'icon': 'EVENT_SEAT',
-                            'onClick': {
-                                'action': {
-                                    'actionMethodName': INTERACTIVE_IMAGE_BUTTON_ACTION,
-                                    'parameters': [{
-                                        'key': INTERACTIVE_BUTTON_PARAMETER_KEY,
-                                        'value': event_message
-                                    }]
-                                }
-                            }
-                        }
-                    }
-                ]
-            })
-
-        elif word == 'textbutton':
-            widgets.append({
-                'buttons': [
-                    {
-                        'textButton': {
-                            'text': 'TEXT BUTTON',
-                            'onClick': {
-                                'openLink': {
-                                    'url': 'https://developers.google.com',
-                                }
-                            }
-                        }
-                    }
-                ]
-            })
-
-        elif word == 'imagebutton':
-            widgets.append({
-                'buttons': [
-                    {
-                        'imageButton': {
-                            'icon': 'EVENT_SEAT',
-                            'onClick': {
-                                'openLink': {
-                                    'url': 'https://developers.google.com',
-                                }
-                            }
-                        }
-                    }
-                ]
-            })
-
-        elif word == 'image':
-            widgets.append({
-                'image': {
-                    'imageUrl': 'https://goo.gl/Bpa3Y5',
-                    'onClick': {
-                        'openLink': {
-                            'url': 'https://developers.google.com'
-                        }
-                    }
-                }
-            })
-
-
-
-    if header != None:
-        cards.append(header)
-
-    cards.append({ 'sections': [{ 'widgets': widgets }]})
-    response['cards'] = cards
-
-    return response
-
-
-def respond_to_interactive_card_click(action_name, custom_params):
-    """Creates a response for when the user clicks on an interactive card.
-
-    See the guide for creating interactive cards
-    https://developers.google.com/hangouts/chat/how-tos/cards-onclick
-
-    Args:
-        action_name: the name of the custom action defined in the original bot response
-        custom_params: the parameters defined in the original bot response
-
-    """
-    message = 'You clicked {}'.format(
-        'a text button' if action_name == INTERACTIVE_TEXT_BUTTON_ACTION
-            else 'an image button')
-
-    original_message = ""
-
-    if custom_params[0]['key'] == INTERACTIVE_BUTTON_PARAMETER_KEY:
-        original_message = custom_params[0]['value']
-    else:
-        original_message = '<i>Cannot determine original message</i>'
-
-    # If you want to respond to the same room but with a new message,
-    # change the following value to NEW_MESSAGE.
-    action_response = 'UPDATE_MESSAGE'
-
-    return {
-        'actionResponse': {
-            'type': action_response
-        },
-        'cards': [
-            {
-                'header': {
-                    'title': BOT_HEADER,
-                    'subtitle': 'Interactive card clicked',
-                    'imageUrl': 'https://goo.gl/5obRKj',
-                    'imageStyle': 'IMAGE'
-                }
-            },
-            {
-                'sections': [
-                    {
-                        'widgets': [
-                            {
-                                'textParagraph': {
-                                    'text': message
-                                }
-                            },
-                            {
-                                'keyValue': {
-                                    'topLabel': 'Original message',
-                                    'content': original_message
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    }
 
 
 # def on_logout(event: dict) -> dict:
