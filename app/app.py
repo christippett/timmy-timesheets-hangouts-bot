@@ -1,3 +1,5 @@
+import json
+
 from chalice import Chalice
 
 app = Chalice(app_name='timesheet-bot')
@@ -6,6 +8,28 @@ app = Chalice(app_name='timesheet-bot')
 @app.route('/')
 def index():
     return {'hello': 'world'}
+
+
+@app.route('/bot', methods=['POST'])
+def bot_event():
+    """Handler for events from Hangouts Chat."""
+    request = app.current_request
+    event = request.json_body
+    json_string = json.dumps(event, indent=2)
+    if event['type'] == 'MESSAGE' or (
+            event['type'] == 'ADDED_TO_SPACE' and 'message' in event):
+        return { 'text':  json_string }
+    elif event['type'] == 'ADDED_TO_SPACE':
+        # Added via DM
+        # TODO: Register conversation with DynamoDB
+        return { 'text':  json_string }
+    elif event_data['type'] == 'CARD_CLICKED':
+        action_name = event_data['action']['actionMethodName']
+        parameters = event_data['action']['parameters']
+        return { 'text':  json_string }
+    elif event['type'] == 'REMOVED_FROM_SPACE':
+        # TODO: Delete converation ID fom DynamoDB
+        pass
 
 
 # The view function above will return {"hello": "world"}
