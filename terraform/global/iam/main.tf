@@ -71,6 +71,7 @@ resource "aws_iam_policy" "timesheets_lambda" {
                 "${data.terraform_remote_state.s3.s3_ssm_kms_key_arn}",
                 "${data.terraform_remote_state.ssm.google_auth_client_secret_kms_key_arn}",
                 "${data.terraform_remote_state.ssm.google_auth_service_account_kms_key_arn}",
+                "${data.terraform_remote_state.ssm.oauth_cipher_kms_key_arn}",
                 "${data.terraform_remote_state.ses.ses_ssm_kms_key_arn}",
                 "${data.terraform_remote_state.acm.acm_kms_key_arn}"
             ]

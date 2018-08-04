@@ -18,6 +18,14 @@ output "google_auth_service_account_kms_key_arn" {
     value = "${module.ssm_google_auth_service_account.kms_key_arn}"
 }
 
+output "oauth_cipher_kms_key_id" {
+    value = "${module.ssm_oauth_cipher_key.kms_key_id}"
+}
+
+output "oauth_cipher_kms_key_arn" {
+    value = "${module.ssm_oauth_cipher_key.kms_key_arn}"
+}
+
 ###########################################################
 
 # SSM
@@ -36,4 +44,12 @@ output "google_auth_service_account_ssm_arn" {
 
 output "google_auth_service_account_ssm_name" {
     value = "${module.ssm_google_auth_service_account.ssm_name}"
+}
+
+output "oauth_cipher_ssm_name" {
+    value = "${module.ssm_oauth_cipher_key.ssm_name}"
+}
+
+output "oauth_cipher_ssm_arn" {
+    value = "${module.ssm_oauth_cipher_key.ssm_arn}"
 }
