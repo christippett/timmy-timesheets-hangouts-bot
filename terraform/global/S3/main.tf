@@ -53,3 +53,13 @@ resource "aws_s3_bucket" "app" {
         }
     }
 }
+
+
+module "ssm_kms_s3" {
+    source                      = "../../modules/ssm"
+    service_name                = "team2-s3"
+    qualified_path_to_outputs   = "/team2/global/S3/S3_terraform_outputs"
+    terraform_outputs           = "${map("website_endpoint", aws_s3_bucket.website.website_endpoint, "website_bucket_id", aws_s3_bucket.website.id, "app_bucket_id", aws_s3_bucket.app.id, "website_bucket_arn", aws_s3_bucket.website.arn, "app_bucket_arn", aws_s3_bucket.app.arn)}"
+    global_tags                 = "${data.terraform_remote_state.shared.global_tags}"
+}
+
