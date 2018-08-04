@@ -17,6 +17,7 @@ provider "aws" {
 
 resource "aws_acm_certificate" "cert" {
   domain_name = "${data.terraform_remote_state.route53.r53_primary_zone_name}"
+  subject_alternative_names = ["*.${data.terraform_remote_state.route53.r53_primary_zone_name}"]
   validation_method = "DNS"
 }
 

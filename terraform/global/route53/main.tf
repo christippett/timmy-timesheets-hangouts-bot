@@ -19,16 +19,35 @@ provider "aws" {
 # then they go here. Otherwise then entries for each relevant
 # service
 
+# Hardcoded API Gateway record
+# records = ["https://sdr1ekqn43.execute-api.ap-southeast-2.amazonaws.com"]
+
+
 resource "aws_route53_zone" "primary" {
     name = "timesheets.servian.fun"
     tags = "${data.terraform_remote_state.shared.global_tags}"
 }
 
+resource "aws_api_gateway_domain_name" "apig" {
+  domain_name = "api.timesheets.servian.fun"
+
+  certificate_arn = "${data.terraform_remote_state.acm.acm_cert_arn}"
+}
+
 resource "aws_route53_record" "apig" {
-    name = "api.timesheets.servian.fun"
+    name = "${aws_api_gateway_domain_name.apig.domain_name}"
     type = "A"
     zone_id = "${aws_route53_zone.primary.zone_id}"
-    # Hardcoded API Gateway record
-    records = ["https://sdr1ekqn43.execute-api.ap-southeast-2.amazonaws.com"]
-    ttl = 60
+
+    alias {
+        name                   = "${aws_api_gateway_domain_name.apig.cloudfront_domain_name}"
+        zone_id                = "${aws_api_gateway_domain_name.apig.cloudfront_zone_id}"
+        evaluate_target_health = false
+    }
+}
+
+resource "aws_api_gateway_base_path_mapping" "apig" {
+  api_id      = "sdr1ekqn43"
+  stage_name  = "api"
+  domain_name = "${aws_api_gateway_domain_name.apig.domain_name}"
 }
