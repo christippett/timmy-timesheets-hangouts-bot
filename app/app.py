@@ -136,7 +136,7 @@ def on_mention(event: dict) -> dict:
         }
     user_credentials = user.get_credentials()
     logging.info('Found existing auth credentials for user %s', user_name)
-    return {'text': f'We did it, woo!'}
+    return {'text': "You're authenticated and ready to go!"}
     # return produce_profile_message(user_credentials)
 
 
