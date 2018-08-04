@@ -8,25 +8,17 @@
       </div>
       <div class="column is-6 is-offset-1">
         <h1 class="title is-2">
-          Configure TimePro
+          Timmy Timesheets
         </h1>
         <h2 class="subtitle is-4">
-          Enter your TimePro Timesheets username and password.
+          Let this cover page describe a product or service.
         </h2>
         <br>
-        <section class="timepro-form">
-          <b-field>
-            <b-input placeholder="Username" type="email" icon="account">
-            </b-input>
-          </b-field>
-          <b-field>
-            <b-input placeholder="Password" type="password" icon="lock">
-            </b-input>
-          </b-field>
-          <div class="control">
-            <button class="button is-primary">Submit</button>
-          </div>
-        </section>
+        <p class="has-text-centered">
+          <router-link tag="li" to="/" class="button is-medium is-outlined">
+            Learn more
+          </router-link>
+        </p>
       </div>
     </div>
   </div>
@@ -34,7 +26,7 @@
 
 <script>
 export default {
-  name: 'RegisterConfig',
+  name: 'HelloWorld',
   data () {
     return {
       msg: 'Welcome to Your Vue.js App'
@@ -45,7 +37,5 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.timepro-form {
-  padding: 0 5rem;
-}
+
 </style>
