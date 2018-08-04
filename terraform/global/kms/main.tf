@@ -27,7 +27,7 @@ module "kms-s3-app" {
 
 module "ssm_kms_kms" {
     source                      = "../../modules/ssm"
-    service_name                = "team2-kms-S3"
+    service_name                = "team2-S3-bucket"
     qualified_path_to_outputs   = "/team2/global/kms/kms_terraform_outputs"
     terraform_outputs           = "${map("kms-s3-app-arn", module.kms-s3-app.kms_key_arn, "kms-s3-app-id", module.kms-s3-app.kms_key_id)}"
     global_tags                 = "${data.terraform_remote_state.shared.global_tags}"

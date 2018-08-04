@@ -5,3 +5,8 @@ resource "aws_kms_key" "kms" {
 
     tags                    = "${var.global_tags}"
 }
+
+resource "aws_kms_alias" "kms" {
+    name                    = "alias/${var.service_name}-kms"
+    target_key_id           = "${aws_kms_key.kms.key_id}"
+}

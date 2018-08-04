@@ -16,16 +16,6 @@ provider "aws" {
 }
 
 
-# DELETED FROM KMS block - 2 missing
-
-# "${data.terraform_remote_state.dynamodb.dynamodb_team2_user_register_kms_key_arn}",
-# "${data.terraform_remote_state.sqs.sqs_kms_key_arn}",
-# "${data.terraform_remote_state.sqs.sqs_ssm_kms_key_arn}",
-# "${data.terraform_remote_state.kms.s3_kms_key_arn}",
-# "${data.terraform_remote_state.s3.s3_ssm_kms_key_arn}",
-# "${data.terraform_remote_state.ssm.google_auth_client_secret_kms_key_arn}",
-# "${data.terraform_remote_state.ssm.google_auth_service_account_kms_key_arn}"
-
 resource "aws_iam_role" "timesheets_lambda" {
     name = "team2-timesheets-lambda-role"
     force_detach_policies = true
@@ -73,7 +63,16 @@ resource "aws_iam_policy" "timesheets_lambda" {
                 "kms:Decrypt"
             ],
             "Resource": [
-                "*"
+                "${data.terraform_remote_state.dynamodb.dynamodb_team2_user_register_kms_key_arn}",
+                "${data.terraform_remote_state.sqs.sqs_kms_key_arn}",
+                "${data.terraform_remote_state.sqs.sqs_ssm_kms_key_arn}",
+                "${data.terraform_remote_state.kms.s3_kms_key_arn}",
+                "${data.terraform_remote_state.kms.ssm_kms_key_arn}",
+                "${data.terraform_remote_state.s3.s3_ssm_kms_key_arn}",
+                "${data.terraform_remote_state.ssm.google_auth_client_secret_kms_key_arn}",
+                "${data.terraform_remote_state.ssm.google_auth_service_account_kms_key_arn}",
+                "${data.terraform_remote_state.ses.ses_ssm_kms_key_arn}",
+                "${data.terraform_remote_state.acm.acm_kms_key_arn}"
             ]
         },
         {
@@ -145,12 +144,3 @@ resource "aws_iam_policy_attachment" "timesheets_lambda" {
   roles      = ["${aws_iam_role.timesheets_lambda.name}"]
   policy_arn = "${aws_iam_policy.timesheets_lambda.arn}"
 }
-
-module "ssm_iam" {
-    source                      = "../../modules/ssm"
-    service_name                = "team2-kms-iam"
-    qualified_path_to_outputs   = "/team2/global/iam/iam_terraform_outputs"
-    terraform_outputs           = "${map("team2-timesheets-lambda-role-arn", aws_iam_role.timesheets_lambda.arn)}"
-    global_tags                 = "${data.terraform_remote_state.shared.global_tags}"
-}
-

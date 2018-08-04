@@ -1,6 +1,11 @@
+provider "aws" {
+    region = "ap-southeast-2"
+    profile = "team2servian"
+}
+
 module "kms" {
     source          = "../kms"
-    service_name    = "kms-${var.service_name}"
+    service_name    = "${var.service_name}"
     global_tags     = "${var.global_tags}"
 }
 

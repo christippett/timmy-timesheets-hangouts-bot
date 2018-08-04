@@ -62,6 +62,6 @@ module "ssm_ses" {
     source                      = "../../modules/ssm"
     service_name                = "team2-ses"
     qualified_path_to_outputs   = "/team2/service/ses/ses_terraform_outputs"
-    terraform_outputs           = "${map()}"
+    terraform_outputs           = "${map("ses_identity_arn", aws_ses_domain_identity.ses.arn)}"
     global_tags                 = "${data.terraform_remote_state.shared.global_tags}"
 }
