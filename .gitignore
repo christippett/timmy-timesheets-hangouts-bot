@@ -36,4 +36,5 @@ app/.chalice/venv/
 # Secrets
 *secret*
 *credentials*
+service-account.json
 .env
