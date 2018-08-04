@@ -5,7 +5,7 @@
         <a class="navbar-item" href="../">
           <img src="../assets/servian-logo.png" alt="Logo" class="logo">
         </a>
-        <span class="navbar-burger burger" v-bind:class="{ 'is-active': navbarActive }" v-on:click="navbarActive = !navbarActive">
+        <span class="navbar-burger burger" v-bind:class="{ 'is-active': navbarActive }" @click="navbarActive = !navbarActive">
           <span></span>
           <span></span>
           <span></span>
