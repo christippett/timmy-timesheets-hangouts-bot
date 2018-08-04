@@ -1,0 +1,3 @@
+chalice
+pynamodb
+ssm-parameter-store
