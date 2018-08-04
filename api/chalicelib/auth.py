@@ -29,9 +29,8 @@ PEOPLE_API_SCOPES = [
 ]
 
 # Get client secret JSON from environment (populated from SSM)
-# TODO: Fix grossness that is double json.loads()
-get_client_secret = lambda: json.loads(json.loads(
-    os.environ.get('google_auth_client_secret')).get('google_auth_client_secret'))
+get_client_secret = lambda: json.loads(
+    os.environ.get('google_auth_client_secret'))
 
 
 class OAuth2CallbackCipher(object):
