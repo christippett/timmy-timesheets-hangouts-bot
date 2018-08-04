@@ -8,11 +8,17 @@
       </div>
       <div class="column is-6 is-offset-1">
         <h1 class="title is-2">
-          Authentication Error
+          Timmy Timesheets
         </h1>
         <h2 class="subtitle is-4">
-          We had trouble logging you in.
+          Let this cover page describe a product or service.
         </h2>
+        <br>
+        <p class="has-text-centered">
+          <router-link tag="li" to="/" class="button is-medium is-outlined">
+            Learn more
+          </router-link>
+        </p>
       </div>
     </div>
   </div>
@@ -20,10 +26,16 @@
 
 <script>
 export default {
-  name: 'RegisterError'
+  name: 'HelloWorld',
+  data () {
+    return {
+      msg: 'Welcome to Your Vue.js App'
+    }
+  }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+
 </style>
