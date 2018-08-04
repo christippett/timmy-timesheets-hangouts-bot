@@ -20,14 +20,20 @@ coverage.xml
 *.ipynb*
 
 # Chalice
-app/.chalice/deployments/
-app/.chalice/venv/
+**/.chalice/deployments/
+**/.chalice/venv/
 
 # Artifacts
-/build/
-/dist/
-/docs/_build/
-/htmlcov/
+build/
+dist/
+docs/_build/
+htmlcov/
+
+# JS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Editors
 .idea/
