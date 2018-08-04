@@ -58,6 +58,7 @@ def bot_event():
     event = request.json_body
     space_name = event['space']['name']
     space_type = event['space']['type']
+    user_name = event['user']['name']
 
     if event['type'] == 'ADDED_TO_SPACE':
         # Register new space in DB
@@ -73,8 +74,13 @@ def bot_event():
     if event['type'] == 'MESSAGE' or (
             event['type'] == 'ADDED_TO_SPACE' and 'message' in event):
         message_text = event['message']['text']
-        if message_text == 'login':
+        if message_text.lower() == 'login':
             resp = check_user_authenticated(event)
+        elif message_text.lower() == 'logout':
+            auth.logout(user_name)
+            return {
+                'text': "You've been logged out and your TimePro credentials deleted."
+            }
         else:
             resp = messages.create_card_response(message_text)
 
@@ -86,12 +92,12 @@ def bot_event():
     elif event['type'] == 'REMOVED_FROM_SPACE':
         # Delete space from DB
         try:
-            space = models.Space.get(event['space']['name'])
+            space = models.Space.get(space_name)
             space.delete()
         except models.Space.DoesNotExist:
             pass
         # Logout user (delete from DB and invalidate token)
-        auth.logout(event['user']['name'])
+        auth.logout(user_name)
         return {}
 
     logging.info(resp)
@@ -102,15 +108,17 @@ def bot_event():
 def oauth2_callback():
     request = app.current_request
     if request.query_params.get('error'):
-        return Response(
-            status_code=301,
-            body='',
-            headers={'Location': 'https://timesheets.servian.fun/register/error'})
-    auth.on_oauth2_callback(request)
+        redirect_location = 'https://timesheets.servian.fun/register/error'
+    else:
+        auth.on_oauth2_callback(request)
+        redirect_location = 'https://timesheets.servian.fun/register/config'
+    state = request.query_params.get('state')
+    if state:
+        redirect_location + '?state=' + state
     return Response(
         status_code=301,
         body='',
-        headers={'Location': 'https://timesheets.servian.fun/register/config'})
+        headers={'Location': redirect_location})
 
 
 def check_user_authenticated(event: dict) -> dict:
