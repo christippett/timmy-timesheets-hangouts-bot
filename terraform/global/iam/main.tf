@@ -123,7 +123,8 @@ resource "aws_iam_policy" "timesheets_lambda" {
             "Resource":"*",
             "Action":[
                 "SES:SendEmail",
-                "SES:SendRawEmail"
+                "SES:SendRawEmail",
+                "SES:SendCustomVerificationEmail"
             ],
             "Condition":{
                 "ForAllValues:StringLike":{
@@ -133,6 +134,19 @@ resource "aws_iam_policy" "timesheets_lambda" {
                     ]
                 }
             }
+        },
+        {
+            "Effect":"Allow",
+            "Resource":"*",
+            "Action":[
+                "SES:CreateCustomVerificationEmailTemplate",
+                "SES:DeleteCustomVerificationEmailTemplate",
+                "SES:DeleteVerifiedEmailAddress",
+                "SES:GetCustomVerificationEmailTemplate",
+                "SES:ListCustomVerificationEmailTemplates",
+                "SES:ListVerifiedEmailAddresses",
+                "SES:UpdateCustomVerificationEmailTemplate"
+            ]
         }
     ]
 }
