@@ -12,7 +12,7 @@ terraform {
 
 provider "aws" {
     region  = "ap-southeast-2"
-    profile = "team2"
+    profile = "team2servian"
 }
 
 resource "aws_dynamodb_table" "user_register" {

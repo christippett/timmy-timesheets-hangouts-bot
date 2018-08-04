@@ -12,7 +12,7 @@ terraform {
 
 provider "aws" {
     region  = "ap-southeast-2"
-    profile = "team2"
+    profile = "team2servian"
 }
 
 module "kms_sqs" {
