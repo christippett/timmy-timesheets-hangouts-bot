@@ -1,3 +1,10 @@
 chalice
 pynamodb
 ssm-parameter-store
+cryptography
+requests
+timepro-timesheet
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
