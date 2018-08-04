@@ -3,7 +3,7 @@ import json
 from chalice import Chalice
 from ssm_parameter_store import EC2ParameterStore
 
-from .models import Space
+from chalicelib.models import Space
 
 
 app = Chalice(app_name='timesheet-bot')
@@ -25,8 +25,11 @@ def bot_event():
 
     if event['type'] == 'ADDED_TO_SPACE':
         # Register new space in DB
-        space = Space(event['space']['name'], type=event['space']['type'])
+        space_name = event['space']['name']
+        space_type = event['space']['type']
+        space = Space(space_name, type=space_type)
         space.save()
+        print(f'Registered {space_name} to DynamoDB')
 
     if event['type'] == 'MESSAGE' or (
             event['type'] == 'ADDED_TO_SPACE' and 'message' in event):
@@ -36,26 +39,29 @@ def bot_event():
             parameter = store.get_parameter(param_name, decrypt=True)
             return { 'text':  json.dumps(parameter, indent=4) }
         return { 'text':  json_string }
-    elif event_data['type'] == 'CARD_CLICKED':
-        action_name = event_data['action']['actionMethodName']
-        parameters = event_data['action']['parameters']
+    elif event['type'] == 'CARD_CLICKED':
+        action_name = event['action']['actionMethodName']
+        parameters = event['action']['parameters']
         return { 'text':  json_string }
     elif event['type'] == 'REMOVED_FROM_SPACE':
         # Delete space from DB
-        space = Space.get(event['space']['name'])
-        space.delete()
+        try:
+            space = Space.get(event['space']['name'])
+            space.delete()
+        except Space.DoesNotExist:
+            pass
 
 
-@app.on_sqs_message(queue='team2-sqs-app-data-a')
-def handler(event):
-    for record in event:
-        print("Message body: %s" % record.body)
+# @app.on_sqs_message(queue='team2-sqs-app-data-a')
+# def handler(event):
+#     for record in event:
+#         print("Message body: %s" % record.body)
 
 
-@app.on_s3_event(bucket='mybucket')
-def handler(event):
-    print("Object uploaded for bucket: %s, key: %s"
-          % (event.bucket, event.key))
+# @app.on_s3_event(bucket='mybucket')
+# def handler(event):
+#     print("Object uploaded for bucket: %s, key: %s"
+#           % (event.bucket, event.key))
 
 
 # The view function above will return {"hello": "world"}
