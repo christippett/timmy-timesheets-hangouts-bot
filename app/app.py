@@ -1,8 +1,13 @@
 import json
 
 from chalice import Chalice
+from ssm_parameter_store import EC2ParameterStore
+
+from .models import Space
+
 
 app = Chalice(app_name='timesheet-bot')
+app.debug = True
 
 
 @app.route('/')
@@ -15,21 +20,42 @@ def bot_event():
     """Handler for events from Hangouts Chat."""
     request = app.current_request
     event = request.json_body
-    json_string = json.dumps(event, indent=2)
+    json_string = json.dumps(event, indent=4)
+    message_text = event['message']['text']
+
+    if event['type'] == 'ADDED_TO_SPACE':
+        # Register new space in DB
+        space = Space(event['space']['name'], type=event['space']['type'])
+        space.save()
+
     if event['type'] == 'MESSAGE' or (
             event['type'] == 'ADDED_TO_SPACE' and 'message' in event):
-        return { 'text':  json_string }
-    elif event['type'] == 'ADDED_TO_SPACE':
-        # Added via DM
-        # TODO: Register conversation with DynamoDB
+        if 'param:' in message_text:
+            store = EC2ParameterStore(region_name='ap-southeast-2')
+            _, param_name = message_text.split(':')
+            parameter = store.get_parameter(param_name, decrypt=True)
+            return { 'text':  json.dumps(parameter, indent=4) }
         return { 'text':  json_string }
     elif event_data['type'] == 'CARD_CLICKED':
         action_name = event_data['action']['actionMethodName']
         parameters = event_data['action']['parameters']
         return { 'text':  json_string }
     elif event['type'] == 'REMOVED_FROM_SPACE':
-        # TODO: Delete converation ID fom DynamoDB
-        pass
+        # Delete space from DB
+        space = Space.get(event['space']['name'])
+        space.delete()
+
+
+@app.on_sqs_message(queue='team2-sqs-app-data-a')
+def handler(event):
+    for record in event:
+        print("Message body: %s" % record.body)
+
+
+@app.on_s3_event(bucket='mybucket')
+def handler(event):
+    print("Object uploaded for bucket: %s, key: %s"
+          % (event.bucket, event.key))
 
 
 # The view function above will return {"hello": "world"}
