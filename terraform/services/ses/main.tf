@@ -18,7 +18,7 @@ provider "aws" {
 
 resource "aws_ses_domain_mail_from" "ses" {
     domain           = "${aws_ses_domain_identity.ses.domain}"
-    mail_from_domain = "bounce.${aws_ses_domain_identity.ses.domain}"
+    mail_from_domain = "email.${aws_ses_domain_identity.ses.domain}"
 }
 
 resource "aws_ses_domain_identity" "ses" {

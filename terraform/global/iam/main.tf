@@ -121,11 +121,19 @@ resource "aws_iam_policy" "timesheets_lambda" {
         {
             "Sid":"AuthorizeAccount",
             "Effect":"Allow",
-            "Resource":"${data.terraform_remote_state.ses.ses_identity_arn}",
+            "Resource":"*",
             "Action":[
                 "SES:SendEmail",
                 "SES:SendRawEmail"
-            ]
+            ],
+            "Condition":{
+                "ForAllValues:StringLike":{
+                    "ses:Recipients":[
+                        "*@servian.com",
+                        "*@servian.com.au"
+                    ]
+                }
+            }
         }
     ]
 }
