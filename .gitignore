@@ -20,8 +20,8 @@ coverage.xml
 *.ipynb*
 
 # Chalice
-app/.chalice/deployments/
-app/.chalice/venv/
+**/.chalice/deployments/
+**/.chalice/venv/
 
 # Artifacts
 /build/
