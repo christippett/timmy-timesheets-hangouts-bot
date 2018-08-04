@@ -19,6 +19,10 @@ coverage.xml
 .venv
 *.ipynb*
 
+# Chalice
+app/.chalice/deployments/
+app/.chalice/venv/
+
 # Artifacts
 /build/
 /dist/
@@ -28,3 +32,8 @@ coverage.xml
 # Editors
 .idea/
 .vscode/
+
+# Secrets
+*secret*
+*credentials*
+.env
