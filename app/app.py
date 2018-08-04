@@ -21,7 +21,6 @@ def bot_event():
     request = app.current_request
     event = request.json_body
     json_string = json.dumps(event, indent=4)
-    message_text = event['message']['text']
 
     if event['type'] == 'ADDED_TO_SPACE':
         # Register new space in DB
@@ -33,6 +32,7 @@ def bot_event():
 
     if event['type'] == 'MESSAGE' or (
             event['type'] == 'ADDED_TO_SPACE' and 'message' in event):
+        message_text = event['message']['text']
         if 'param:' in message_text:
             store = EC2ParameterStore(region_name='ap-southeast-2')
             _, param_name = message_text.split(':')
