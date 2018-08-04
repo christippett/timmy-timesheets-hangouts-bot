@@ -35,6 +35,13 @@
 <script>
 export default {
   name: 'RegisterConfig',
+  beforeCreate: function () {
+    var state = this.$route.query.state
+    console.log(state)
+    if (state === undefined) {
+      this.$router.push('/')
+    }
+  },
   data () {
     return {
       msg: 'Welcome to Your Vue.js App'
