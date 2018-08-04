@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "app_name": "timesheet-bot",
+  "app_name": "team2-timesheet-bot",
   "manage_iam_role": false,
   "iam_role_arn":"arn:aws:iam::204449496694:role/team2-timesheets-lambda-role",
   "stages": {
