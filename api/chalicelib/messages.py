@@ -77,9 +77,9 @@ def create_timesheet_card(date_entries, user):
         for entry in entries:
             widgets.append({
                 'keyValue': {
-                    'topLabel': entry.get('customer_description'),
+                    'topLabel': entry.get('project_description'),
                     'content': str(entry.get('hours')),
-                    'bottomLabel': entry.get('project_description'),
+                    'bottomLabel': entry.get('customer_description'),
                     'icon': 'CLOCK'
                 }
             })
@@ -115,7 +115,7 @@ def create_timesheet_card(date_entries, user):
                     'text': 'VIEW TIMESHEET',
                     'onClick': {
                         'openLink': {
-                            'url': 'https://timesheets.com.au',
+                            'url': 'https://timesheets.com.au/login.asp',
                         }
                     }
                 }
