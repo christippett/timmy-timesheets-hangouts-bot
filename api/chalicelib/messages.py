@@ -8,6 +8,7 @@ from httplib2 import Http
 
 INTERACTIVE_TEXT_BUTTON_ACTION = "doTextButtonAction"
 INTERACTIVE_IMAGE_BUTTON_ACTION = "doImageButtonAction"
+COPY_TIMESHEET_ACTION = 'COPY_TIMESHEET'
 INTERACTIVE_BUTTON_PARAMETER_KEY = "param_key"
 BOT_HEADER = 'Card Bot Python'
 
@@ -43,6 +44,88 @@ def send_async_message(message, space_name, thread_id=None, creds=None):
     chat.spaces().messages().create(
         parent=space_name,
         body=message).execute()
+
+
+def create_timesheet_card(date_entries, user):
+    response = dict()
+    cards = list()
+    widgets = list()
+
+    # Create header
+    start_date = min(date_entries.keys())
+    end_date = max(date_entries.keys())
+    start_date_label = start_date.strftime('%d-%b-%Y')
+    end_date_label = end_date.strftime('%d-%b-%Y')
+    header = {
+        'header': {
+            'title': 'Timesheet Summary',
+            'subtitle': f'{start_date_label} - {end_date_label}',
+            'imageUrl': user.picture,
+            'imageStyle': 'AVATAR'
+        }
+    }
+    cards.append(header)
+
+    # Loop through timesheet and construct widgets
+    for date, entries in date_entries.items():
+        date_label = date.strftime('%A, %b %d')
+        widgets.append({
+            'textParagraph' : {
+                'text': f'<b>{date_label}</b>'
+            }
+        })
+        for entry in entries:
+            widgets.append({
+                'keyValue': {
+                    'topLabel': entry.get('customer_description'),
+                    'content': str(entry.get('hours')),
+                    'bottomLabel': entry.get('project_description'),
+                    'icon': 'CLOCK'
+                }
+            })
+    cards.append({ 'sections': [{ 'widgets': widgets }]})
+
+    button_widgets = list()
+    button_widgets.append({
+        'buttons': [
+            {
+                'textButton': {
+                    'text': 'COPY TIMESHEET FORWARD',
+                    'onClick': {
+                        'action': {
+                            'actionMethodName': COPY_TIMESHEET_ACTION,
+                            'parameters': [{
+                                'key': 'start_date',
+                                'value': str(start_date)
+                            },
+                            {
+                                'key': 'end_date',
+                                'value': str(end_date)
+                            }]
+                        }
+                    }
+                }
+            }
+        ]
+    })
+    button_widgets.append({
+        'buttons': [
+            {
+                'textButton': {
+                    'text': 'VIEW TIMESHEET',
+                    'onClick': {
+                        'openLink': {
+                            'url': 'https://timesheets.com.au',
+                        }
+                    }
+                }
+            }
+        ]
+    })
+    cards.append({ 'sections': [{ 'widgets': button_widgets }]})
+
+    response['cards'] = cards
+    return response
 
 
 def create_card_response(event_message):

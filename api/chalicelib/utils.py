@@ -1,5 +1,8 @@
 import re
 import logging
+from dateutil.parser import parse as dateparser
+from dateutil.relativedelta import relativedelta, MO, FR
+from datetime import date
 
 
 def get_base_url(current_request, path=None):
@@ -25,3 +28,12 @@ def get_current_url(current_request, params=True):
         if query_params_string:
             return f'{proto}://{url_path}?{query_params_string}'
     return f'{proto}://{url_path}'
+
+
+def get_this_week_dates():
+    today = date.today()
+    # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
+    week_offset = 1 if today.weekday() >= 5 else 0
+    start_date = today + relativedelta(weekday=MO(-1), weeks=week_offset - 1)
+    end_date = start_date + relativedelta(weekday=FR)
+    return start_date, end_date

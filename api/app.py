@@ -1,17 +1,16 @@
 import json
 import logging
 import os
+from datetime import date, timedelta
 
 import boto3
 from chalice import Chalice, Response
 from google.oauth2 import credentials
 
 from dateutil.parser import parse as dateparser
-from dateutil.relativedelta import relativedelta, MO, FR
-from datetime import date
 
 from ssm_parameter_store import EC2ParameterStore
-from timepro_timesheet.api import TimesheetAPI
+from timepro_timesheet.api import TimesheetAPI, Timesheet
 
 from chalicelib import models, utils, auth, messages
 
@@ -30,7 +29,6 @@ EC2ParameterStore.set_env(parameters)  # add parameters to os.environ before cal
 # Service Outputs
 
 SQS_PARAMETERS = json.loads(os.environ["sqs_terraform_outputs"])
-TODAY = date.today()
 
 session = boto3.session.Session(region_name="ap-southeast-2")
 
@@ -89,7 +87,8 @@ def bot_event():
     elif event['type'] == 'CARD_CLICKED':
         action_name = event['action']['actionMethodName']
         parameters = event['action']['parameters']
-        resp = messages.respond_to_interactive_card_click(action_name, parameters)
+        if action_name == messages.COPY_TIMESHEET_ACTION:
+            resp = copy_timesheet(user_name, parameters)
 
     elif event['type'] == 'REMOVED_FROM_SPACE':
         # Delete space from DB
@@ -187,26 +186,36 @@ def sqs_scrape_handler(event):
     :param event:
     :return:
     """
-    print(event)
+    print('Starting SQS scraping handler')
     for record in event:
         payload = json.loads(record.body)
         email_username = payload["username"]
         user_register = models.UserRegister.get(email_username)
-        tm = TimesheetAPI()
-        tm.login(customer_id=user_register.timepro_customer,
-                 username=user_register.timepro_username,
-                 password=user_register.timepro_password)
+        user_results = list(models.User.scan(filter_condition=(models.User.email==email_username)))
+        if user_results:
+            user = user_results[0]
+        else:
+            user = None
+        api = TimesheetAPI()
+        api.login(customer_id=user_register.timepro_customer,
+                  username=user_register.timepro_username,
+                  password=user_register.timepro_password)
 
         # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
-        week_offset = 1 if TODAY.weekday() >= 5 else 0
-        start_date = TODAY + relativedelta(weekday=MO(-1), weeks=week_offset - 1)
-        end_date = start_date + relativedelta(weekday=FR)
-        timesheet = tm.get_timesheet(start_date=start_date, end_date=end_date)
+        start_date, end_date = utils.get_this_week_dates()
+
+        timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
         date_entries = timesheet.date_entries()
 
+        print(f'Looping through timesheet dates for user: {email_username}')
         for date, entries in date_entries.items():
-            timesheet_entry = models.Timesheet(email_username, date, entries=entries)
+            print(f'Getting date: {date}')
+            json_entries = {'entries': entries}
+            timesheet_entry = models.Timesheet(email_username, date, entries=json_entries)
             timesheet_entry.save()
+        message = messages.create_timesheet_card(date_entries, user=user)
+        space_name = get_space_for_email(email_username)
+        messages.send_async_message(message, space_name=space_name)
 
 
 def get_space_for_email(email: str):
@@ -224,15 +233,27 @@ def get_space_for_email(email: str):
     return None
 
 
-
-# @app.on_sqs_message(queue='team2-sqs-app-data')
-# def handler(event):
-#     for record in event:
-#         print("Message body: %s" % record.body)
-
-
-# @app.on_s3_event(bucket='mybucket')
-# def handler(event):
-#     print("Object uploaded for bucket: %s, key: %s"
-#           % (event.bucket, event.key))
-
+def copy_timesheet(username, parameters):
+    start_date = None
+    end_date = None
+    if parameters[0]['key'] == 'start_date':
+        start_date = dateparser(parameters[0]['value'])
+    if parameters[1]['key'] == 'end_date':
+        end_date = dateparser(parameters[0]['value'])
+    if start_date is None or end_date is None:
+        return
+    user = models.User.get(username)
+    user_register = models.UserRegister.get(user.email)
+    api = TimesheetAPI()
+    api.login(customer_id=user_register.timepro_customer,
+              username=user_register.timepro_username,
+              password=user_register.timepro_password)
+    start_date, end_date = utils.get_this_week_dates()
+    timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
+    date_entries = timesheet.date_entries()
+    new_date_entries = {}
+    for date, entries in date_entries.items():
+        new_date = date + timedelta(days=7)
+        new_date_entries[new_date] = entries
+    new_timesheet = Timesheet(data=new_date_entries)
+    api.post_timesheet(new_timesheet)

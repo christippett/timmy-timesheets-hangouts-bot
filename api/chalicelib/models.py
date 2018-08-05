@@ -20,6 +20,20 @@ class Space(Model):
     username = UnicodeAttribute(null=False)  # event['user']['name']
     type = UnicodeAttribute(null=False)
 
+    @classmethod
+    def get_space_for_email(cls, email: str):
+        # extract first member of scan, assuming first entry
+        username_results = list(User.scan(filter_condition=(User.email==email)))
+        if username_results:
+            username = username_results[0]
+        else:
+            return None
+
+        space_results = list(cls.scan(filter_condition=(cls.username == username)))
+        if space_results:
+            return space_results[0]
+        return None
+
 
 class UserRegister(Model):
     class Meta:
@@ -95,7 +109,7 @@ class Timesheet(Model):
         region = _DEFAULT_AWS_REGION
     username = UnicodeAttribute(hash_key=True)
     date = UTCDateTimeAttribute(range_key=True)
-    entries = ListAttribute(null=False)
+    entries = JSONAttribute(null=False)
     updated_timestamp = UTCDateTimeAttribute(null=False)
 
     def save(self, **kwargs):
