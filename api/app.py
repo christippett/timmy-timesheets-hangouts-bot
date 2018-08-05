@@ -1,7 +1,7 @@
 import json
 import logging
 
-from chalice import Chalice, Response
+from chalice import Chalice, Response, CORSConfig
 from google.oauth2 import credentials
 import google_auth_httplib2
 from apiclient import discovery
@@ -27,6 +27,11 @@ Credentials = credentials.Credentials
 
 # Initiate app
 app = Chalice(app_name='timesheet-bot', debug=True)
+cors_config = CORSConfig(
+    allow_origin='*',
+    max_age=600,
+    allow_credentials=True
+)
 
 
 # Routes
@@ -119,6 +124,12 @@ def oauth2_callback():
         status_code=301,
         body='',
         headers={'Location': redirect_location})
+
+
+@app.route('/timepro/config', methods=['POST'], cors=cors_config)
+def timepro_config():
+    request = app.current_request
+    return request.json_body
 
 
 def check_user_authenticated(event: dict) -> dict:
