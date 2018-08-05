@@ -88,7 +88,7 @@ export default {
         .then((response) => {
           console.log(response.body)
           this.formLoading = false
-          this.configComplete = True
+          this.configComplete = true
         })
         .catch((response) => {
           console.log(response.body)
