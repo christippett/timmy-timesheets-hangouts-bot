@@ -60,7 +60,8 @@ resource "aws_iam_policy" "timesheets_lambda" {
             "Effect":"Allow",
             "Action":[
                 "kms:Encrypt",
-                "kms:Decrypt"
+                "kms:Decrypt",
+                "kms:GenerateDataKey"
             ],
             "Resource": [
                 "${data.terraform_remote_state.dynamodb.dynamodb_team2_user_register_kms_key_arn}",

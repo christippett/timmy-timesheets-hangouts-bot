@@ -1,8 +1,14 @@
+import json
 import re
 import logging
+
+import boto3
 from dateutil.parser import parse as dateparser
 from dateutil.relativedelta import relativedelta, MO, FR
 from datetime import date
+
+
+session = boto3.session.Session(region_name="ap-southeast-2")
 
 
 def get_base_url(current_request, path=None):
@@ -37,3 +43,10 @@ def get_this_week_dates():
     start_date = today + relativedelta(weekday=MO(-1), weeks=week_offset - 1)
     end_date = start_date + relativedelta(weekday=FR)
     return start_date, end_date
+
+
+def sqs_send_message(queue_url: str, message: dict):
+    logging.info("Sending message to SQS Queue: {queue_url}".format(queue_url=queue_url))
+    sqs_client = session.resource('sqs')
+    sqs_queue = sqs_client.Queue(queue_url)
+    sqs_queue.send_message(MessageBody=json.dumps(message))

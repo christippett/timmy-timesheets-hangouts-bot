@@ -3,7 +3,6 @@ import logging
 import os
 from datetime import date, timedelta
 
-import boto3
 from chalice import Chalice, Response
 from google.oauth2 import credentials
 
@@ -16,6 +15,7 @@ from chalicelib import models, utils, auth, messages
 
 
 # Logging
+
 logging.basicConfig(
     level=logging.INFO,
     style='{',
@@ -30,7 +30,6 @@ EC2ParameterStore.set_env(parameters)  # add parameters to os.environ before cal
 
 SQS_PARAMETERS = json.loads(os.environ["sqs_terraform_outputs"])
 
-session = boto3.session.Session(region_name="ap-southeast-2")
 
 # Google credentials
 Credentials = credentials.Credentials
@@ -80,7 +79,10 @@ def bot_event():
             message_body = {
                 "username": username.email
             }
-            sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
+            return {
+                'text': "I'm off to track down your timesheets!"
+            }
         elif message_text.lower() == 'logout':
             logout_success = auth.logout(user_name)
             if logout_success:
@@ -236,12 +238,6 @@ def get_space_for_email(email: str):
     if space_results:
         return space_results[0]
     return None
-
-
-def sqs_send_message(queue_url: str, message: dict):
-    sqs_client = session.resource('sqs')
-    sqs_queue = sqs_client.Queue(queue_url)
-    sqs_queue.send_message(MessageBody=json.dumps(message))
 
 
 def copy_timesheet(username, parameters):
