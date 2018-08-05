@@ -1,5 +1,6 @@
 import os
 import json
+from random import randint
 
 from oauth2client.service_account import ServiceAccountCredentials
 from apiclient import discovery
@@ -83,28 +84,20 @@ def create_initial_card():
     return response
 
 
-def create_timesheet_reminder_card(user):
+def create_reminder_meme():
     response = dict()
     cards = list()
     widgets = list()
-    widgets.append({
-        'textParagraph' : {
-            'text': "<br>🔔🔔🔔 <b>It's TIMESHEET time</b> 🔔🔔🔔<br>"
-        }
-    })
+    random_integer = randint(0, 4) + 1
+    meme_url = f'https://timesheets.servian.fun/images/{random_integer}.jpg'
     widgets.append({
         'image': {
-            'imageUrl': 'https://timesheets.servian.fun/images/5.jpg',
+            'imageUrl': meme_url,
             'onClick': {
                 'openLink': {
                     'url': 'https://timesheets.com.au/login.asp'
                 }
             }
-        }
-    })
-    widgets.append({
-        'textParagraph' : {
-            'text': "<br>🔔🔔🔔 <b>Get your timesheets in now!</b> 🔔🔔🔔<br>"
         }
     })
     cards.append({ 'sections': [{ 'widgets': widgets }]})
