@@ -108,7 +108,7 @@ def create_reminder_meme():
     return response
 
 
-def create_timesheet_card(date_entries, user, buttons=False):
+def create_timesheet_card(date_entries, user, title='Timesheet Summary', buttons=False):
     response = dict()
     cards = list()
     widgets = list()
@@ -120,7 +120,7 @@ def create_timesheet_card(date_entries, user, buttons=False):
     end_date_label = end_date.strftime('%d-%b-%Y')
     header = {
         'header': {
-            'title': 'Timesheet Summary',
+            'title': title,
             'subtitle': f'{start_date_label} - {end_date_label}',
             'imageUrl': user.picture,
             'imageStyle': 'AVATAR'
@@ -161,7 +161,7 @@ def create_timesheet_card(date_entries, user, buttons=False):
             'buttons': [
                 {
                     'textButton': {
-                        'text': '💾 UPDATE TIMESHEET',
+                        'text': 'SAVE TIMESHEET',
                         'onClick': {
                             'action': {
                                 'actionMethodName': COPY_TIMESHEET_ACTION,
@@ -179,20 +179,20 @@ def create_timesheet_card(date_entries, user, buttons=False):
                 }
             ]
         })
-        button_widgets.append({
-            'buttons': [
-                {
-                    'textButton': {
-                        'text': '🌏 VIEW ON TIMESHEETS.COM.AU',
-                        'onClick': {
-                            'openLink': {
-                                'url': 'https://timesheets.com.au/login.asp',
-                            }
-                        }
-                    }
-                }
-            ]
-        })
+        # button_widgets.append({
+        #     'buttons': [
+        #         {
+        #             'textButton': {
+        #                 'text': 'GO TO TIMESHEETS.COM.AU',
+        #                 'onClick': {
+        #                     'openLink': {
+        #                         'url': 'https://timesheets.com.au/login.asp',
+        #                     }
+        #                 }
+        #             }
+        #         }
+        #     ]
+        # })
         cards.append({ 'sections': [{ 'widgets': button_widgets }]})
 
     response['cards'] = cards
@@ -212,7 +212,7 @@ def create_timesheet_success_card():
         'buttons': [
             {
                 'textButton': {
-                    'text': '🌏 VIEW ON TIMESHEETS.COM.AU',
+                    'text': 'VIEW ON TIMESHEETS.COM.AU',
                     'onClick': {
                         'openLink': {
                             'url': 'https://timesheets.com.au/login.asp',
