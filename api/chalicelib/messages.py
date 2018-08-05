@@ -105,7 +105,7 @@ def create_timesheet_card(date_entries, user, buttons=False):
 
     # Loop through timesheet and construct widgets
     for date, entries in date_entries.items():
-        date_label = date.strftime('%A, %b %d')
+        date_label = date.strftime('%A, %d %B')
         widgets.append({
             'textParagraph' : {
                 'text': f'<b>{date_label}</b>'
@@ -114,9 +114,9 @@ def create_timesheet_card(date_entries, user, buttons=False):
         for entry in entries:
             widgets.append({
                 'keyValue': {
-                    'topLabel': entry.get('project_description'),
+                    'topLabel': entry.get('customer_description'),
                     'content': str(entry.get('hours')),
-                    'bottomLabel': entry.get('customer_description'),
+                    'bottomLabel': entry.get('project_description'),
                     'icon': 'CLOCK'
                 }
             })
