@@ -1,6 +1,32 @@
 {
   "resources": [
     {
+      "name": "sqs_chat_handler",
+      "resource_type": "lambda_function",
+      "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-sqs_chat_handler"
+    },
+    {
+      "name": "sqs_chat_handler-sqs-event-source",
+      "resource_type": "sqs_event",
+      "queue_arn": "arn:aws:sqs:ap-southeast-2:204449496694:team2-sqs-chat",
+      "event_uuid": "f64d7f93-2ccf-4430-9940-037cfaf2dd26",
+      "queue": "team2-sqs-chat",
+      "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-sqs_chat_handler"
+    },
+    {
+      "name": "sqs_scrape_handler",
+      "resource_type": "lambda_function",
+      "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-sqs_scrape_handler"
+    },
+    {
+      "name": "sqs_scrape_handler-sqs-event-source",
+      "resource_type": "sqs_event",
+      "queue_arn": "arn:aws:sqs:ap-southeast-2:204449496694:team2-sqs-scrape",
+      "event_uuid": "1041de8f-aa1a-4b6c-bd84-425877e7b5ed",
+      "queue": "team2-sqs-scrape",
+      "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-sqs_scrape_handler"
+    },
+    {
       "name": "api_handler",
       "resource_type": "lambda_function",
       "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev"
