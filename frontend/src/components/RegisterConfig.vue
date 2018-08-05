@@ -10,7 +10,7 @@
           Enter your TimePro Timesheets username and password.
         </h2>
         <br>
-        <b-notification type="is-danger" v-if="errorMessage || true" class="form-errors">
+        <b-notification type="is-danger" v-if="errorMessage" class="form-errors">
           {{ errorMessage }}
         </b-notification>
         <section class="timepro-form">
@@ -71,7 +71,7 @@ export default {
         'customer': this.customer,
         'state': this.state
       }
-      this.$http.post('http://127.0.0.1:8000/timepro/config', body)
+      this.$http.post('https://api.timesheets.servian.fun/timepro/config', body)
         .then((response) => {
           console.log(response.body)
           this.formLoading = false

@@ -137,7 +137,8 @@ def timepro_config():
             password=data['password'])
         oauth2_callback_args = auth.OAuth2CallbackCipher.decrypt(data['state'])
         username = oauth2_callback_args['user_name']
-        user_register = models.UserRegister(username)
+        user = models.User.get(username)
+        user_register = models.UserRegister(user.email)
         user_register.timepro_username = data['username']
         user_register.timepro_password = data['password']
         user_register.timepro_customer = data['customer']
@@ -186,84 +187,6 @@ def sqs_scrape_handler(event):
     for record in event:
         print("Message body: %s" % record.body)
 
-# def on_logout(event: dict) -> dict:
-#     """Handles logging out the user."""
-#     user_name = event['user']['name']
-#     try:
-#         auth.logout(user_name)
-#     except Exception as e:
-#         logging.exception(e)
-#         return {'text': 'Failed to log out user %s: ```%s```' % (user_name, e)}
-#     else:
-#         return {'text': 'Logged out.'}
-
-
-# def produce_profile_message(creds: Credentials):
-#     """Generate a message containing the users profile inforamtion."""
-#     http = google_auth_httplib2.AuthorizedHttp(creds)
-#     people_api = discovery.build('people', 'v1', http=http)
-#     try:
-#         person = people_api.people().get(
-#             resourceName='people/me',
-#             personFields=','.join([
-#                 'names',
-#                 'addresses',
-#                 'emailAddresses',
-#                 'phoneNumbers',
-#                 'photos',
-#             ])).execute()
-#     except Exception as e:
-#         logging.exception(e)
-#         return {
-#             'text': 'Failed to fetch profile info: ```%s```' % e,
-#         }
-#     card = {}
-#     if person.get('names') and person.get('photos'):
-#         card.update({
-#             'header': {
-#                 'title': person['names'][0]['displayName'],
-#                 'imageUrl': person['photos'][0]['url'],
-#                 'imageStyle': 'AVATAR',
-#             },
-#         })
-#     widgets = []
-#     for email_address in person.get('emailAddresses', []):
-#         widgets.append({
-#             'keyValue': {
-#                 'icon': 'EMAIL',
-#                 'content': email_address['value'],
-#             }
-#         })
-#     for phone_number in person.get('phoneNumbers', []):
-#         widgets.append({
-#             'keyValue': {
-#                 'icon': 'PHONE',
-#                 'content': phone_number['value'],
-#             }
-#         })
-#     for address in person.get('addresses', []):
-#         if 'formattedValue' in address:
-#             widgets.append({
-#                 'keyValue': {
-#                     'icon': 'MAP_PIN',
-#                     'content': address['formattedValue'],
-#                 }
-#             })
-#     if widgets:
-#         card.update({
-#             'sections': [
-#                 {
-#                     'widgets': widgets,
-#                 }
-#             ]
-#         })
-#     if card:
-#         return {'cards': [card]}
-#     return {
-#         'text': 'Hmm, no profile information found',
-#     }
-
-
 # @app.on_sqs_message(queue='team2-sqs-app-data')
 # def handler(event):
 #     for record in event:
@@ -275,23 +198,3 @@ def sqs_scrape_handler(event):
 #     print("Object uploaded for bucket: %s, key: %s"
 #           % (event.bucket, event.key))
 
-
-# The view function above will return {"hello": "world"}
-# whenever you make an HTTP GET request to '/'.
-#
-# Here are a few more examples:
-#
-# @app.route('/hello/{name}')
-# def hello_name(name):
-#    # '/hello/james' -> {"hello": "james"}
-#    return {'hello': name}
-#
-# @app.route('/users', methods=['POST'])
-# def create_user():
-#     # This is the JSON body the user sent in their POST request.
-#     user_as_json = app.current_request.json_body
-#     # We'll echo the json body back to the user in a 'user' key.
-#     return {'user': user_as_json}
-#
-# See the README documentation for more examples.
-#
