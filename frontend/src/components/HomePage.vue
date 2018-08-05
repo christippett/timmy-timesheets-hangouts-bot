@@ -7,7 +7,7 @@
           Timmy Timesheets
         </h1>
         <h2 class="subtitle is-4">
-          Let this cover page describe a product or service.
+          A super helpful chat bot that'll help you with your timesheets. That's the idea, anyway 🤷
         </h2>
         <br>
         <p class="has-text-centered">
