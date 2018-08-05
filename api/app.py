@@ -190,7 +190,7 @@ def sqs_scrape_handler(event):
     print(event)
     for record in event:
         payload = json.loads(record.body)
-        user_register = models.User.get(payload["username"])
+        user_register = models.UserRegister.get(payload["username"])
         tm = TimesheetAPI()
         tm.login(customer_id=user_register.timepro_customer,
                  username=user_register.timepro_username,
@@ -199,8 +199,10 @@ def sqs_scrape_handler(event):
         # DEFAULTS TO LAST MONTH
         start_date = TODAY + relativedelta(day=1)
         end_date = TODAY + relativedelta(day=31)
-        month = tm.get_timesheet(start_date=start_date, end_date=end_date)
-        print(month)
+        timesheet = tm.get_timesheet(start_date=start_date, end_date=end_date)
+
+        for date, entries in timesheet.date_entries().items():
+            # LEFT IT HERE
 
 
 
