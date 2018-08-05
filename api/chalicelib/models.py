@@ -36,6 +36,8 @@ class User(Model):
     given_name = UnicodeAttribute(null=True)
     family_name = UnicodeAttribute(null=True)
     email = UnicodeAttribute(null=True)
+    picture = UnicodeAttribute(null=True)
+    google_id = UnicodeAttribute(null=True)
     updated_timestamp = UTCDateTimeAttribute(null=False)
 
     def get_credentials(self):
@@ -44,36 +46,22 @@ class User(Model):
     def get_profile(self):
         creds = self.get_credentials()
         http = google_auth_httplib2.AuthorizedHttp(creds)
-        people_api = discovery.build('people', 'v1', http=http)
+        oauth_api = discovery.build('oauth2', 'v2', http=http)
         try:
-            person = people_api.people().get(
-                resourceName='people/me',
-                personFields=','.join([
-                    'names',
-                    'addresses',
-                    'emailAddresses',
-                    'phoneNumbers',
-                    'photos',
-                ])).execute()
-            return person
+            user_info = oauth_api.userinfo().get().execute()
+            return user_info
         except Exception as e:
             return None
 
     def populate_from_profile(self):
-        person = self.get_profile()
-        if person:
-            names = names = person.get('names', [])
-            primary_name = [n for n in names if n['metadata'].get('primary', False)]
-            if primary_name:
-                primary_name = primary_name[0]
-                self.display_name = primary_name.get('displayName')
-                self.given_name = primary_name.get('givenName')
-                self.family_name = primary_name.get('familyName')
-            email_addresses = person.get('emailAddresses', [])
-            primary_email = [e for e in email_addresses if e['metadata'].get('primary', False)]
-            if primary_email:
-                primary_email = primary_email[0]
-                self.email = primary_email.get('value')
+        profile = self.get_profile()
+        if profile:
+            self.email = profile.get('email')
+            self.display_name = profile.get('display_name')
+            self.given_name = profile.get('given_name')
+            self.family_name = profile.get('family_name')
+            self.picture = profile.get('picture')
+            self.google_id = profile.get('id')
 
     def put_credentials(self, creds: Credentials) -> None:
         """Stores OAuth2 credentials for a user.
