@@ -68,7 +68,7 @@ def bot_event():
         message_text = event['message']['text'].lower()
         if message_text == 'login':
             resp = check_user_authenticated(event)
-        elif message_text == 'remind_everyone':
+        elif message_text in ['remind_everyone', 'remind_everyone_horribly']:
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=event)
             resp = {'text': 'Sending a reminder to everyone!'}
         elif message_text == 'get_last_weeks_timesheet':
@@ -235,15 +235,17 @@ def sqs_process_handler(sqs_event):
     for record in sqs_event:
         event = json.loads(record.body)
         # TODO: Use a single event handler for both sync and async responses
-        if event['type'] == 'MESSAGE' and event['message']['text'].lower() == 'remind_everyone':
+        if event['type'] == 'MESSAGE' and event['message']['text'].lower() in ['remind_everyone', 'remind_everyone_horribly']:
             spaces = models.Space.scan()
             for space in spaces:
                 user = models.User.get(space.username)
+                if event['message']['text'].lower() == 'remind_everyone':
+                    message = { 'text': f"Hey {user.given_name}! Just a friendly reminder that it's time to do your timesheet 😄" }
+                else:
+                    message = messages.create_timesheet_reminder_card(user)
                 payload = {
                     'space_name': space.name,
-                    'message': {
-                        'text': f"🔔 Hey {user.given_name}! Just a friendly reminder that it's time to do your timesheet 😄 🔔"
-                    }
+                    'message': message
                 }
                 utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_id"], message=payload)
 

@@ -83,6 +83,34 @@ def create_initial_card():
     return response
 
 
+def create_timesheet_reminder_card(user):
+    response = dict()
+    cards = list()
+    widgets = list()
+    widgets.append({
+        'textParagraph' : {
+            'text': "<br>🔔🔔🔔 <b>It's TIMESHEET time</b> 🔔🔔🔔<br>"
+        }
+    })
+    widgets.append({
+        'image': {
+            'imageUrl': 'https://timesheets.servian.fun/images/5.jpg',
+            'onClick': {
+                'openLink': {
+                    'url': 'https://timesheets.com.au/login.asp'
+                }
+            }
+        }
+    })
+    widgets.append({
+        'textParagraph' : {
+            'text': "<br>🔔🔔🔔 <b>Get your timesheets in now!</b> 🔔🔔🔔<br>"
+        }
+    })
+    cards.append({ 'sections': [{ 'widgets': widgets }]})
+    response['cards'] = cards
+    return response
+
 def create_timesheet_card(date_entries, user, buttons=False):
     response = dict()
     cards = list()
