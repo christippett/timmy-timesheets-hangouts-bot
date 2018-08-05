@@ -141,7 +141,15 @@ class Timesheet(Model):
     username = UnicodeAttribute(hash_key=True)
     date = UTCDateTimeAttribute(range_key=True)
     entries = JSONAttribute(null=False)
+    email = UnicodeAttribute(null=True)
     updated_timestamp = UTCDateTimeAttribute(null=False)
+
+    @classmethod
+    def bulk_create_from_date_entries(cls, user, date_entries):
+        for date, entries in date_entries.items():
+            entry_data = {'entries': entries}
+            ts = cls(user.username, date, entries=entry_data, email=user.email)
+            ts.save()
 
     def save(self, **kwargs):
         self.updated_timestamp = datetime.now()

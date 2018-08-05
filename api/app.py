@@ -268,11 +268,7 @@ def sqs_scrape_handler(event):
 
         if message_text == "scrape_update_dynamo_db":
             print(f'Looping through timesheet dates for user: {username}')
-            for date, entries in date_entries.items():
-                print(f'Getting date: {date}')
-                json_entries = {'entries': entries}
-                timesheet_entry = models.Timesheet(username, date, entries=json_entries, email=user.email)
-                timesheet_entry.save()
+            models.Timesheet.bulk_create_from_date_entries(user=user, date_entries=date_entries)
 
         elif message_text == "get_proposed_timesheet":
             message = messages.create_timesheet_card(date_entries, user=user, buttons=True)
