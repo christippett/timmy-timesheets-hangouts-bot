@@ -231,18 +231,10 @@ def sqs_process_handler(event):
     """
     for record in event:
         payload = json.loads(record.body)
-        email_username = payload["username"]
+        username = payload["username"]
         message_text = payload["message_text"]
-        user_register = models.UserRegister.get(email_username)
-        user_results = list(models.User.scan(filter_condition=(models.User.email == email_username)))
-        if user_results:
-            user = user_results[0]
-        else:
-            user = None
-        api = TimesheetAPI()
-        api.login(customer_id=user_register.timepro_customer,
-                  username=user_register.timepro_username,
-                  password=user_register.timepro_password)
+        user = models.User.get(username)
+        api = user.get_api_and_login()
 
         # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
         start_date, end_date = utils.get_last_week_dates() \
@@ -253,7 +245,7 @@ def sqs_process_handler(event):
 
         message = messages.create_timesheet_card(date_entries, user=user, buttons=True) \
             if message_text == "get_proposed_timesheet" else messages.create_timesheet_card(date_entries, user=user)
-        space_name = get_space_for_email(email_username)
+        space_name = models.Space.get_from_username(username)
         messages.send_async_message(message, space_name=space_name)
 
 
@@ -268,17 +260,9 @@ def sqs_scrape_handler(event):
     """
     for record in event:
         payload = json.loads(record.body)
-        email_username = payload["username"]
-        user_register = models.UserRegister.get(email_username)
-        user_results = list(models.User.scan(filter_condition=(models.User.email == email_username)))
-        if user_results:
-            user = user_results[0]
-        else:
-            user = None
-        api = TimesheetAPI()
-        api.login(customer_id=user_register.timepro_customer,
-                  username=user_register.timepro_username,
-                  password=user_register.timepro_password)
+        username = payload["username"]
+        user = models.User.get(username)
+        api = user.get_api_and_login()
 
         # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
         start_date, end_date = utils.get_this_week_dates()
@@ -286,27 +270,12 @@ def sqs_scrape_handler(event):
         timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
         date_entries = timesheet.date_entries()
 
-        print(f'Looping through timesheet dates for user: {email_username}')
+        print(f'Looping through timesheet dates for user: {username}')
         for date, entries in date_entries.items():
             print(f'Getting date: {date}')
             json_entries = {'entries': entries}
-            timesheet_entry = models.Timesheet(email_username, date, entries=json_entries)
+            timesheet_entry = models.Timesheet(username, date, entries=json_entries, email=user.email)
             timesheet_entry.save()
         message = messages.create_timesheet_card(date_entries, user=user)
-        space_name = get_space_for_email(email_username)
+        space_name = models.Space.get_from_username(username)
         messages.send_async_message(message, space_name=space_name)
-
-
-def get_space_for_email(email: str):
-    # extract first member of scan, assuming first entry
-    username_results = [user.username for user in models.User.scan(filter_condition=(models.User.email == email))]
-    if username_results:
-        username = username_results[0]
-    else:
-        username = None
-
-    space_results = [space.name for space in models.Space.scan(filter_condition=(models.Space.username == username))]
-
-    if space_results:
-        return space_results[0]
-    return None
