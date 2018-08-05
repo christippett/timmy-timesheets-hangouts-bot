@@ -77,6 +77,9 @@ def bot_event():
         message_text = event['message']['text']
         if message_text.lower() == 'login':
             resp = check_user_authenticated(event)
+        elif message_text.lower() == 'get_timesheet':
+
+            sqs_send_message()
         elif message_text.lower() == 'logout':
             logout_success = auth.logout(user_name)
             if logout_success:
@@ -107,7 +110,7 @@ def bot_event():
 
 
 @app.route('/auth/callback')
-def oauth2_callback():
+def sqs_trigger():
     request = app.current_request
     if request.query_params and request.query_params.get('error'):
         redirect_location = 'https://timesheets.servian.fun/register/error?error=123&state=abc'
@@ -187,7 +190,6 @@ def sqs_scrape_handler(event):
     :param event:
     :return:
     """
-    print(event)
     for record in event:
         payload = json.loads(record.body)
         email_username = payload["username"]
@@ -222,6 +224,13 @@ def get_space_for_email(email: str):
     if space_results:
         return space_results[0]
     return None
+
+
+def sqs_send_message(queue_url: str, message: dict):
+    sqs_client = session.resource('sqs')
+    sqs_queue = sqs_client.Queue(queue_url)
+    sqs_queue.send_message(MessageBody=json.dumps(message))
+
 
 
 
