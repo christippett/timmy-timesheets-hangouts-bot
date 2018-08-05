@@ -71,9 +71,9 @@ def bot_event():
         if message_text.lower() == 'login':
             resp = check_user_authenticated(event)
         elif message_text.lower() == 'get_last_weeks_timesheet':
-            username = models.User.get(user_name)
+            user = models.User.get(user_name)
             message_body = {
-                "username": username.email,
+                "username": user.username,
                 "message_text": message_text.lower()
             }
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=message_body)
@@ -83,7 +83,7 @@ def bot_event():
         elif message_text.lower() == 'get_current_timesheet':
             username = models.User.get(user_name)
             message_body = {
-                "username": username.email,
+                "username": user.username,
                 "message_text": message_text.lower()
             }
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=message_body)
@@ -165,11 +165,11 @@ def timepro_config():
             password=data['password'])
         oauth2_callback_args = auth.OAuth2CallbackCipher.decrypt(data['state'])
         username = oauth2_callback_args['user_name']
-        user = models.User.get(username)
-        user_register = models.UserRegister(user.email)
-        user_register.timepro_username = data['username']
-        user_register.timepro_password = data['password']
-        user_register.timepro_customer = data['customer']
+        user_register = models.UserRegister(
+            username
+            timepro_username=data['username'],
+            timepro_password=data['password'],
+            timepro_customer=data['customer'])
         user_register.save()
     except api.LoginError as e:
         return Response(body={'error': str(e)}, status_code=403)
@@ -242,7 +242,7 @@ def sqs_process_handler(event):
 def sqs_scrape_handler(event):
     """
         {
-            "username" : email
+            "username" : chat username (users/12312312)
         }
     :param event:
     :return:
