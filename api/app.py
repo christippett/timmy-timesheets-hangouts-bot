@@ -286,7 +286,7 @@ def sqs_scrape_handler(sqs_event):
         elif message_text == "get_proposed_timesheet":
             new_date_entries = {}
             for date, entries in date_entries.items():
-                new_date = date + timedelta(days=add_days)
+                new_date = date + timedelta(days=7)
                 new_date_entries[new_date] = entries
             message = messages.create_timesheet_card(new_date_entries, user=user, buttons=True)
         else:
