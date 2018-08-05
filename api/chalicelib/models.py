@@ -24,13 +24,12 @@ class Space(Model):
     @classmethod
     def get_space_for_email(cls, email: str):
         # extract first member of scan, assuming first entry
-        username_results = list(User.scan(filter_condition=(User.email==email)))
-        if username_results:
-            username = username_results[0]
+        user_results = list(User.scan(filter_condition=(User.email==email)))
+        if user_results:
+            user = user_results[0]
         else:
             return None
-
-        space_results = list(cls.scan(filter_condition=(cls.username == username)))
+        space_results = list(cls.scan(filter_condition=(cls.username==user.username)))
         if space_results:
             return space_results[0]
         return None

@@ -282,20 +282,5 @@ def sqs_scrape_handler(event):
             timesheet_entry = models.Timesheet(email_username, date, entries=json_entries)
             timesheet_entry.save()
         message = messages.create_timesheet_card(date_entries, user=user)
-        space_name = get_space_for_email(email_username)
+        space_name = models.Space.get_space_for_email(email_username)
         messages.send_async_message(message, space_name=space_name)
-
-
-def get_space_for_email(email: str):
-    # extract first member of scan, assuming first entry
-    username_results = [user.username for user in models.User.scan(filter_condition=(models.User.email == email))]
-    if username_results:
-        username = username_results[0]
-    else:
-        username = None
-
-    space_results = [space.name for space in models.Space.scan(filter_condition=(models.Space.username == username))]
-
-    if space_results:
-        return space_results[0]
-    return None
