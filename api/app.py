@@ -204,6 +204,10 @@ def sqs_scrape_handler(event):
         for date, entries in timesheet.date_entries().items():
             # LEFT IT HERE
 
+def get_space_for_email(email: str):
+    # extract first member of scan, assuming first entry
+    username = [user.username for user in models.User.scan(filter_condition=(models.User.email==email))][0]
+    return models.Space.get(username)
 
 
 # @app.on_sqs_message(queue='team2-sqs-app-data')
