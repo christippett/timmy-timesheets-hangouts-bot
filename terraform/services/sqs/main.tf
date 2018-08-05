@@ -49,6 +49,6 @@ module "ssm_sqs" {
     source                      = "../../modules/ssm"
     service_name                = "team2-sqs"
     qualified_path_to_outputs   = "/team2/service/sqs/sqs_terraform_outputs"
-    terraform_outputs           = "${map("sqs_chat_kms_arn", module.kms_sqs_chat.kms_key_arn, "sqs_queue_chat_arn", aws_sqs_queue.sqs_queue_chat.arn, "sqs_queue_chat_id", aws_sqs_queue.sqs_queue_chat.id, "sqs_scrape_kms_arn", module.kms_sqs_scrape.kms_key_arn, "sqs_scrape_chat_arn", aws_sqs_queue.sqs_queue_scrape.arn, "sqs_queue_scrape_id", aws_sqs_queue.sqs_queue_scrape.id)}"
+    terraform_outputs           = "${map("sqs_chat_kms_arn", module.kms_sqs_chat.kms_key_arn, "sqs_queue_chat_arn", aws_sqs_queue.sqs_queue_chat.arn, "sqs_queue_chat_id", aws_sqs_queue.sqs_queue_chat.id, "sqs_queue_chat_name", aws_sqs_queue.sqs_queue_chat.name, "sqs_scrape_kms_arn", module.kms_sqs_scrape.kms_key_arn, "sqs_scrape_chat_arn", aws_sqs_queue.sqs_queue_scrape.arn, "sqs_queue_scrape_id", aws_sqs_queue.sqs_queue_scrape.id, "sqs_queue_scrape_name", aws_sqs_queue.sqs_queue_scrape.name)}"
     global_tags                 = "${data.terraform_remote_state.shared.global_tags}"
 }

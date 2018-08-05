@@ -19,7 +19,7 @@ resource "aws_dynamodb_table" "user_register" {
     name           = "team2-user-register"
     read_capacity  = 20
     write_capacity = 20
-    hash_key       = "id"
+    hash_key       = "username"
 
     # NOTE: hash of email address is the id 
 
@@ -28,7 +28,7 @@ resource "aws_dynamodb_table" "user_register" {
     # a range key or global or local secondary indexes
 
     attribute {
-        name = "id"
+        name = "username"
         type = "S"
     }
 
@@ -43,14 +43,14 @@ resource "aws_dynamodb_table" "user" {
     name           = "team2-user"
     read_capacity  = 20
     write_capacity = 20
-    hash_key       = "name"
+    hash_key       = "username"
 
     # As this table is for storing registration details per user
     # including hashed credentials there is no real need for 
     # a range key or global or local secondary indexes
 
     attribute {
-        name = "name"
+        name = "username"
         type = "S"
     }
 
