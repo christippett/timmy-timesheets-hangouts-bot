@@ -1,7 +1,45 @@
+import os
+import json
+
+from oauth2client.service_account import ServiceAccountCredentials
+from apiclient import discovery
+from httplib2 import Http
+
+
 INTERACTIVE_TEXT_BUTTON_ACTION = "doTextButtonAction"
 INTERACTIVE_IMAGE_BUTTON_ACTION = "doImageButtonAction"
 INTERACTIVE_BUTTON_PARAMETER_KEY = "param_key"
 BOT_HEADER = 'Card Bot Python'
+
+
+get_service_account = lambda: json.loads(
+    os.environ.get('google_auth_service_account'))
+
+
+
+def send_async_message(message, space_name, thread_id=None):
+    """Sends a response back to the Hangouts Chat room asynchronously.
+
+    Args:
+      response: the response payload
+      spaceName: The URL of the Hangouts Chat room
+
+    """
+    # The following two lines of code update the thread that raised the event.
+    # Delete them if you want to send the message in a new thread.
+    if thread_id != None:
+        message['thread'] = thread_id
+
+    scopes = ['https://www.googleapis.com/auth/chat.bot']
+    credentials = ServiceAccountCredentials
+    credentials = ServiceAccountCredentials.from_json_keyfile_dict(
+        get_service_account(), scopes)
+    http_auth = credentials.authorize(Http())
+
+    chat = discovery.build('chat', 'v1', http=http_auth)
+    chat.spaces().messages().create(
+        parent=space_name,
+        body=message).execute()
 
 
 def create_card_response(event_message):
