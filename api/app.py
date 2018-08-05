@@ -96,7 +96,23 @@ def bot_event():
         action_name = event['action']['actionMethodName']
         parameters = event['action']['parameters']
         if action_name == messages.COPY_TIMESHEET_ACTION:
-            resp = copy_timesheet(user_name, parameters)
+            # TODO: Put this all in an SQS queue so we can return
+            # a synchronous response to the chat ASAP
+            start_date = None
+            end_date = None
+            if parameters[0]['key'] == 'start_date':
+                start_date = dateparser(parameters[0]['value'])
+            if parameters[1]['key'] == 'end_date':
+                end_date = dateparser(parameters[0]['value'])
+            if start_date is None or end_date is None:
+                return
+            user = models.User.get(user_name)
+            timesheet = user.get_timesheet(start_date=start_date, end_date=end_date)  # TODO: Get from DynamoDB instead
+            new_timesheet = utils.copy_timesheet(timesheet, add_days=7)
+            api = user.get_api_and_login()
+            api.post_timesheet(new_timesheet)
+            resp = messages.create_timesheet_card(new_timesheet.date_entries(), user=user)
+            resp['actionResponse'] = 'UPDATE_MESSAGE'
 
     elif event['type'] == 'REMOVED_FROM_SPACE':
         # Delete space from DB
@@ -172,8 +188,9 @@ def check_user_authenticated(event: dict) -> dict:
         }
     user_credentials = user.get_credentials()
     logging.info('Found existing auth credentials for user %s', user_name)
-    return {'text': "You're authenticated and ready to go!"}
-    # return produce_profile_message(user_credentials)
+    return {
+        'text': "You're authenticated! As soon as we validate your TimePro credentials we'll lookup your timesheet ⏱ 👍"
+    }
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_chat_name"])
@@ -239,28 +256,3 @@ def get_space_for_email(email: str):
         return space_results[0]
     return None
 
-
-def copy_timesheet(username, parameters):
-    start_date = None
-    end_date = None
-    if parameters[0]['key'] == 'start_date':
-        start_date = dateparser(parameters[0]['value'])
-    if parameters[1]['key'] == 'end_date':
-        end_date = dateparser(parameters[0]['value'])
-    if start_date is None or end_date is None:
-        return
-    user = models.User.get(username)
-    user_register = models.UserRegister.get(user.email)
-    api = TimesheetAPI()
-    api.login(customer_id=user_register.timepro_customer,
-              username=user_register.timepro_username,
-              password=user_register.timepro_password)
-    start_date, end_date = utils.get_this_week_dates()
-    timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
-    date_entries = timesheet.date_entries()
-    new_date_entries = {}
-    for date, entries in date_entries.items():
-        new_date = date + timedelta(days=7)
-        new_date_entries[new_date] = entries
-    new_timesheet = Timesheet(data=new_date_entries)
-    api.post_timesheet(new_timesheet)

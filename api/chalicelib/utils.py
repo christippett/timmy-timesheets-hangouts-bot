@@ -5,7 +5,10 @@ import logging
 import boto3
 from dateutil.parser import parse as dateparser
 from dateutil.relativedelta import relativedelta, MO, FR
-from datetime import date
+from datetime import date, timedelta
+from timepro_timesheet.api import TimesheetAPI, Timesheet
+
+from . import models
 
 
 session = boto3.session.Session(region_name="ap-southeast-2")
@@ -50,3 +53,13 @@ def sqs_send_message(queue_url: str, message: dict):
     sqs_client = session.resource('sqs')
     sqs_queue = sqs_client.Queue(queue_url)
     sqs_queue.send_message(MessageBody=json.dumps(message))
+
+
+def copy_timesheet(timesheet, add_days=7):
+    date_entries = timesheet.date_entries()
+    new_date_entries = {}
+    for date, entries in date_entries.items():
+        new_date = date + timedelta(days=add_days)
+        new_date_entries[new_date] = entries
+    new_timesheet = Timesheet(data=new_date_entries)
+    return new_timesheet
