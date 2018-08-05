@@ -46,7 +46,44 @@ def send_async_message(message, space_name, thread_id=None, creds=None):
         body=message).execute()
 
 
-def create_timesheet_card(date_entries, user):
+def create_initial_card():
+    response = dict()
+    cards = list()
+    widgets = list()
+
+    # Create header
+
+    header = {
+        'header': {
+            'title': 'Timmy Timesheets Cheatsheet',
+            'subtitle': "Hi. Here's a few helpful commands..."
+        }
+    }
+    cards.append(header)
+
+    widgets.append({
+        'textParagraph': {
+            'text': '<b>get_current_timesheet</b><br/><p>This displays your timesheet for the current week</p>'
+        }
+    })
+    widgets.append({
+        'textParagraph': {
+            'text': "<b>get_last_weeks_timesheet</b><br/><p>This displays last week's timesheet</p>"
+        }
+    })
+    widgets.append({
+        'textParagraph': {
+            'text': "<b>get_proposed_timesheet</b><br/><p>This displays my best guess at this week's timesheet</p>"
+        }
+    })
+
+    cards.append({ 'sections': [{ 'widgets': widgets }]})
+
+    response['cards'] = cards
+    return response
+
+
+def create_timesheet_card(date_entries, user, buttons=False):
     response = dict()
     cards = list()
     widgets = list()
@@ -85,44 +122,45 @@ def create_timesheet_card(date_entries, user):
             })
     cards.append({ 'sections': [{ 'widgets': widgets }]})
 
-    button_widgets = list()
-    button_widgets.append({
-        'buttons': [
-            {
-                'textButton': {
-                    'text': 'COPY TIMESHEET FORWARD',
-                    'onClick': {
-                        'action': {
-                            'actionMethodName': COPY_TIMESHEET_ACTION,
-                            'parameters': [{
-                                'key': 'start_date',
-                                'value': str(start_date)
-                            },
-                            {
-                                'key': 'end_date',
-                                'value': str(end_date)
-                            }]
+    if buttons:
+        button_widgets = list()
+        button_widgets.append({
+            'buttons': [
+                {
+                    'textButton': {
+                        'text': 'COPY TIMESHEET FORWARD',
+                        'onClick': {
+                            'action': {
+                                'actionMethodName': COPY_TIMESHEET_ACTION,
+                                'parameters': [{
+                                    'key': 'start_date',
+                                    'value': str(start_date)
+                                },
+                                {
+                                    'key': 'end_date',
+                                    'value': str(end_date)
+                                }]
+                            }
                         }
                     }
                 }
-            }
-        ]
-    })
-    button_widgets.append({
-        'buttons': [
-            {
-                'textButton': {
-                    'text': 'VIEW TIMESHEET',
-                    'onClick': {
-                        'openLink': {
-                            'url': 'https://timesheets.com.au/login.asp',
+            ]
+        })
+        button_widgets.append({
+            'buttons': [
+                {
+                    'textButton': {
+                        'text': 'VIEW TIMESHEET',
+                        'onClick': {
+                            'openLink': {
+                                'url': 'https://timesheets.com.au/login.asp',
+                            }
                         }
                     }
                 }
-            }
-        ]
-    })
-    cards.append({ 'sections': [{ 'widgets': button_widgets }]})
+            ]
+        })
+        cards.append({ 'sections': [{ 'widgets': button_widgets }]})
 
     response['cards'] = cards
     return response

@@ -13,7 +13,6 @@ from timepro_timesheet.api import TimesheetAPI, Timesheet
 
 from chalicelib import models, utils, auth, messages
 
-
 # Logging
 
 logging.basicConfig(
@@ -29,7 +28,6 @@ EC2ParameterStore.set_env(parameters)  # add parameters to os.environ before cal
 # Service Outputs
 
 SQS_PARAMETERS = json.loads(os.environ["sqs_terraform_outputs"])
-
 
 # Google credentials
 Credentials = credentials.Credentials
@@ -65,23 +63,32 @@ def bot_event():
         print(f'Registered {space_name} to DynamoDB')
         # Prompt registration
         if event['space']['type'] == 'DM':
-            return {
-                'text': 'Hey - thanks for adding me!'
-            }
+            return messages.create_initial_card()
 
     if event['type'] == 'MESSAGE' or (
             event['type'] == 'ADDED_TO_SPACE' and 'message' in event):
         message_text = event['message']['text']
         if message_text.lower() == 'login':
             resp = check_user_authenticated(event)
-        elif message_text.lower() == 'get_timesheet':
+        elif message_text.lower() == 'get_last_weeks_timesheet':
             username = models.User.get(user_name)
             message_body = {
-                "username": username.email
+                "username": username.email,
+                "message_text": message_text.lower()
             }
-            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_name"], message=message_body)
             return {
-                'text': "I'm off to track down your timesheets!"
+                'text': "I'm off to track down last week's timesheet!"
+            }
+        elif message_text.lower() == 'get_current_timesheet':
+            username = models.User.get(user_name)
+            message_body = {
+                "username": username.email,
+                "message_text": message_text.lower()
+            }
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_name"], message=message_body)
+            return {
+                'text': "I'm off to track down this week's timesheets!"
             }
         elif message_text.lower() == 'logout':
             logout_success = auth.logout(user_name)
@@ -202,6 +209,43 @@ def sqs_chat_handler(event):
         messages.send_async_message(message, space_name)
 
 
+@app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_process_name"])
+def sqs_process_handler(event):
+    """
+        {
+            "username" : email,
+            "message_text" : string
+        }
+    :param event:
+    :return:
+    """
+    for record in event:
+        payload = json.loads(record.body)
+        email_username = payload["username"]
+        message_text = payload["message_text"]
+        user_register = models.UserRegister.get(email_username)
+        user_results = list(models.User.scan(filter_condition=(models.User.email == email_username)))
+        if user_results:
+            user = user_results[0]
+        else:
+            user = None
+        api = TimesheetAPI()
+        api.login(customer_id=user_register.timepro_customer,
+                  username=user_register.timepro_username,
+                  password=user_register.timepro_password)
+
+        # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
+        start_date, end_date = utils.get_last_weeks_timesheet() \
+            if message_text == "get_last_weeks_timesheet" else utils.get_this_week_dates()
+
+        timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
+        date_entries = timesheet.date_entries()
+
+        message = messages.create_timesheet_card(date_entries, user=user)
+        space_name = get_space_for_email(email_username)
+        messages.send_async_message(message, space_name=space_name)
+
+
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_scrape_name"])
 def sqs_scrape_handler(event):
     """
@@ -215,7 +259,7 @@ def sqs_scrape_handler(event):
         payload = json.loads(record.body)
         email_username = payload["username"]
         user_register = models.UserRegister.get(email_username)
-        user_results = list(models.User.scan(filter_condition=(models.User.email==email_username)))
+        user_results = list(models.User.scan(filter_condition=(models.User.email == email_username)))
         if user_results:
             user = user_results[0]
         else:
@@ -244,7 +288,7 @@ def sqs_scrape_handler(event):
 
 def get_space_for_email(email: str):
     # extract first member of scan, assuming first entry
-    username_results = [user.username for user in models.User.scan(filter_condition=(models.User.email==email))]
+    username_results = [user.username for user in models.User.scan(filter_condition=(models.User.email == email))]
     if username_results:
         username = username_results[0]
     else:
@@ -255,4 +299,3 @@ def get_space_for_email(email: str):
     if space_results:
         return space_results[0]
     return None
-

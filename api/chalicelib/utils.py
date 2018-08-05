@@ -48,6 +48,15 @@ def get_this_week_dates():
     return start_date, end_date
 
 
+def get_last_week_dates():
+    today = date.today()
+    # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
+    week_offset = 2 if today.weekday() >= 5 else 1
+    start_date = today + relativedelta(weekday=MO(-1), weeks=week_offset - 1)
+    end_date = start_date + relativedelta(weekday=FR)
+    return start_date, end_date
+
+
 def sqs_send_message(queue_url: str, message: dict):
     logging.info("Sending message to SQS Queue: {queue_url}".format(queue_url=queue_url))
     sqs_client = session.resource('sqs')
