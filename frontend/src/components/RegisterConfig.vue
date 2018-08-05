@@ -3,16 +3,19 @@
     <div class="columns is-vcentered">
       <mascot class="column is-5"></mascot>
       <div class="column is-6 is-offset-1">
-        <transition name="fade">
-          <div v-if="configComplete">
+        <transition name="fade" mode="out-in">
+          <div v-if="configComplete" key="1">
             <h1 class="title is-2">
               You're all set up 🎉
             </h1>
             <h2 class="subtitle is-4">
               Your TimePro credentials have been securely stored and ready for Timmy to help you with your timesheets. Hooray!
             </h2>
+            <p>
+              You can close this window now 😉
+            </p>
           </div>
-          <div v-else>
+          <div v-else key="2">
             <h1 class="title is-2">
               Configure TimePro
             </h1>
@@ -111,8 +114,11 @@ export default {
 .form-errors {
   margin: 2rem 1rem;
 }
+.transition-zone {
+  opacity: 1
+}
 .fade-enter-active, .fade-leave-active {
-  transition: opacity .5s;
+  transition: opacity .3s;
 }
 .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
   opacity: 0;
