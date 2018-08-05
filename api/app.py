@@ -275,17 +275,18 @@ def sqs_scrape_handler(sqs_event):
             start_date, end_date = utils.get_week_dates(weeks=0)
 
         timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
-        if message_text == "get_proposed_timesheet":
-            timesheet = utils.copy_timesheet(timesheet)
-
         date_entries = timesheet.date_entries()
 
         if message_text == "scrape_update_dynamo_db":
             print(f'Looping through timesheet dates for user: {username}')
             models.Timesheet.bulk_create_from_date_entries(user=user, date_entries=date_entries)
-            message = "Updated your work history in DyDb!!"
+            message = {"text": "Updated your work history in DyDb!!"}
         elif message_text == "get_proposed_timesheet":
-            message = messages.create_timesheet_card(date_entries, user=user, buttons=True)
+            new_date_entries = {}
+            for date, entries in date_entries.items():
+                new_date = date + timedelta(days=add_days)
+                new_date_entries[new_date] = entries
+            message = messages.create_timesheet_card(new_date_entries, user=user, buttons=True)
         else:
             message = messages.create_timesheet_card(date_entries, user=user)
 
