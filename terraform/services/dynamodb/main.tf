@@ -87,11 +87,11 @@ resource "aws_dynamodb_table" "timesheets" {
     name           = "team2-timesheets"
     read_capacity  = 20
     write_capacity = 20
-    hash_key       = "id"
+    hash_key       = "username"
     range_key      = "date"
 
     attribute {
-        name = "id"
+        name = "username"
         type = "S"
     }
 

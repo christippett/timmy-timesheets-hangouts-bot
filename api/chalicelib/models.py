@@ -44,6 +44,15 @@ class User(Model):
     google_id = UnicodeAttribute(null=True)
     updated_timestamp = UTCDateTimeAttribute(null=False)
 
+
+class Timesheets(Model):
+    class Meta:
+        table_name = 'team2-scrape'
+        region = _DEFAULT_AWS_REGION
+    username = UnicodeAttribute(hash_key=True)
+    date = UTCDateTimeAttribute(range_key=True)
+    timesheet = JSONAttribute(null=False)
+
     def get_credentials(self):
         return Credentials(**self.credentials)
 

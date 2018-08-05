@@ -6,6 +6,10 @@ import boto3
 from chalice import Chalice, Response, CORSConfig
 from google.oauth2 import credentials
 
+from dateutil.parser import parse as dateparser
+from dateutil.relativedelta import relativedelta, MO, FR
+from datetime import date
+
 from ssm_parameter_store import EC2ParameterStore
 from timepro_timesheet.api import TimesheetAPI
 
@@ -28,6 +32,7 @@ from pprint import pprint
 pprint(parameters)
 
 SQS_PARAMETERS = json.loads(os.environ["sqs_terraform_outputs"])
+TODAY = date.today()
 
 session = boto3.session.Session(region_name="ap-southeast-2")
 
@@ -180,12 +185,26 @@ def sqs_chat_handler(event):
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_scrape_name"])
 def sqs_scrape_handler(event):
     """
-
+        {
+            "username" : email
+        }
     :param event:
     :return:
     """
     for record in event:
-        print("Message body: %s" % record.body)
+        user_register = models.User.get(record.body["username"])
+        tm = TimesheetAPI()
+        tm.login(customer_id=user_register.timepro_customer,
+                 username=user_register.timepro_username,
+                 password=user_register.timepro_password)
+
+        # DEFAULTS TO LAST MONTH
+        start_date = TODAY + relativedelta(day=1)
+        end_date = TODAY + relativedelta(day=31)
+        month = tm.get_timesheet(start_date=start_date, end_date=end_date)
+        print(month)
+
+
 
 # @app.on_sqs_message(queue='team2-sqs-app-data')
 # def handler(event):
