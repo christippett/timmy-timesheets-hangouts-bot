@@ -20,6 +20,20 @@ class Space(Model):
     username = UnicodeAttribute(null=False)  # event['user']['name']
     type = UnicodeAttribute(null=False)
 
+    @classmethod
+    def get_space_for_email(cls, email: str):
+        # extract first member of scan, assuming first entry
+        username_results = list(User.scan(filter_condition=(User.email==email)))
+        if username_results:
+            username = username_results[0]
+        else:
+            return None
+
+        space_results = list(cls.scan(filter_condition=(cls.username == username)))
+        if space_results:
+            return space_results[0]
+        return None
+
 
 class UserRegister(Model):
     class Meta:
@@ -45,14 +59,57 @@ class User(Model):
     google_id = UnicodeAttribute(null=True)
     updated_timestamp = UTCDateTimeAttribute(null=False)
 
+    def get_credentials(self):
+        return Credentials(**self.credentials)
+
+    def get_profile(self):
+        creds = self.get_credentials()
+        http = google_auth_httplib2.AuthorizedHttp(creds)
+        oauth_api = discovery.build('oauth2', 'v2', http=http)
+        try:
+            user_info = oauth_api.userinfo().get().execute()
+            return user_info
+        except Exception as e:
+            return None
+
+    def populate_from_profile(self):
+        profile = self.get_profile()
+        if profile:
+            self.email = profile.get('email')
+            self.display_name = profile.get('display_name')
+            self.given_name = profile.get('given_name')
+            self.family_name = profile.get('family_name')
+            self.picture = profile.get('picture')
+            self.google_id = profile.get('id')
+
+    def put_credentials(self, creds: Credentials) -> None:
+        """Stores OAuth2 credentials for a user.
+
+        Args:
+            user_name (str): The identifier for the associated user.
+            creds (Credentials): The OAuth2 credentials obtained for the user.
+        """
+        self.credentials = {
+            'token': creds.token,
+            'refresh_token': creds.refresh_token,
+            'token_uri': creds.token_uri,
+            'client_id': creds.client_id,
+            'client_secret': creds.client_secret,
+            'scopes': creds.scopes,
+        }
+
+    def save(self, **kwargs):
+        self.updated_timestamp = datetime.now()
+        return super().save(**kwargs)
+
 
 class Timesheet(Model):
     class Meta:
-        table_name = 'team2-scrape'
+        table_name = 'team2-timesheets'
         region = _DEFAULT_AWS_REGION
     username = UnicodeAttribute(hash_key=True)
     date = UTCDateTimeAttribute(range_key=True)
-    entries = ListAttribute(null=False)
+    entries = JSONAttribute(null=False)
     updated_timestamp = UTCDateTimeAttribute(null=False)
 
     def save(self, **kwargs):
