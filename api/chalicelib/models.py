@@ -24,7 +24,7 @@ class UserRegister(Model):
     class Meta:
         table_name = 'team2-user-register'
         region = _DEFAULT_AWS_REGION
-    username = UnicodeAttribute(hash_key=True)  # event['user']['name']
+    username = UnicodeAttribute(hash_key=True)  # User email
     timepro_username = UnicodeAttribute(null=False)
     timepro_password = UnicodeAttribute(null=False)
     timepro_customer = UnicodeAttribute(null=False)
