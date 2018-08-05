@@ -28,8 +28,6 @@ parameters = store.get_parameters_by_path('/team2/', strip_path=True)
 EC2ParameterStore.set_env(parameters)  # add parameters to os.environ before calling Chalice()
 
 # Service Outputs
-from pprint import pprint
-pprint(parameters)
 
 SQS_PARAMETERS = json.loads(os.environ["sqs_terraform_outputs"])
 TODAY = date.today()
@@ -188,8 +186,10 @@ def sqs_scrape_handler(event):
     :param event:
     :return:
     """
+    print(event)
     for record in event:
-        user_register = models.User.get(record.body["username"])
+        payload = json.loads(record.body)
+        user_register = models.User.get(payload["username"])
         tm = TimesheetAPI()
         tm.login(customer_id=user_register.timepro_customer,
                  username=user_register.timepro_username,
