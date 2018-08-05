@@ -78,8 +78,11 @@ def bot_event():
         if message_text.lower() == 'login':
             resp = check_user_authenticated(event)
         elif message_text.lower() == 'get_timesheet':
-
-            sqs_send_message()
+            username = models.User.get(user_name)
+            message_body = {
+                "username": username.email
+            }
+            sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
         elif message_text.lower() == 'logout':
             logout_success = auth.logout(user_name)
             if logout_success:
