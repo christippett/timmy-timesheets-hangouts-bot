@@ -66,17 +66,23 @@ def bot_event():
     if event['type'] == 'MESSAGE' or (
             event['type'] == 'ADDED_TO_SPACE' and 'message' in event):
         message_text = event['message']['text'].lower()
+
+        user_authenticated, resp = check_user_authenticated(event)
+        if not user_authenticated:
+            return resp
+
         if message_text == 'login':
-            resp = check_user_authenticated(event)
+            user_authenticated, resp = check_user_authenticated(event)
+            if user_authenticated:
+                resp = {'text': "You're already authenticated 👍"}
         elif message_text == 'help':
             resp = messages.create_initial_card()
         elif message_text in ['remind_everyone', 'remind_everyone_meme']:
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=event)
             resp = {'text': 'Sending a reminder to everyone!'}
         elif message_text == 'get_last_weeks_timesheet':
-            user = models.User.get(user_name)
             message_body = {
-                "username": user.username,
+                "username": user_name,
                 "message_text": message_text
             }
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
@@ -84,9 +90,8 @@ def bot_event():
                 'text': "I'm off to track down last week's timesheet!"
             }
         elif message_text == 'get_current_timesheet':
-            user = models.User.get(user_name)
             message_body = {
-                "username": user.username,
+                "username": user_name,
                 "message_text": message_text
             }
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
@@ -94,9 +99,8 @@ def bot_event():
                 'text': "I'm off to track down this week's timesheets!"
             }
         elif message_text == 'get_proposed_timesheet':
-            user = models.User.get(user_name)
             message_body = {
-                "username": user.username,
+                "username": user_name,
                 "message_text": message_text
             }
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
@@ -104,9 +108,8 @@ def bot_event():
                 'text': "Thinking cap is on! I'm off to divine this week's timesheet!"
             }
         elif message_text == 'scrape_update_dynamo_db':
-            user = models.User.get(user_name)
             message_body = {
-                "username": user.username,
+                "username": user_name,
                 "message_text": message_text
             }
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
@@ -181,6 +184,13 @@ def timepro_config():
         return Response(body={'error': str(e)}, status_code=403)
     except Exception as e:
         return Response(body={'error': 'An error occured when validating TimePro credentials'}, status_code=400)
+    # Send async success message
+    space = models.Space.get_from_username(username)
+    payload = {
+        'space_name': space.name,
+        'message': {'text': "You're authenticated and your TimePro credentials have been configured. You're on fire! 🔥"}
+    }
+    utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_id"], message=payload)
     return request.json_body
 
 
@@ -190,20 +200,18 @@ def check_user_authenticated(event: dict) -> dict:
     user_name = event['user']['name']
     try:
         user = models.User.get(user_name)
-    except models.User.DoesNotExist:
+        user_register = models.UserRegister.get(user_name)
+    except (models.User.DoesNotExist, models.UserRegister.DoesNotExist):
         logging.info('Requesting credentials for user %s', user_name)
         oauth2_url = auth.get_authorization_url(event, request)
-        return {
+        return False, {
             'actionResponse': {
                 'type': 'REQUEST_CONFIG',
                 'url': oauth2_url,
             }
         }
-    user_credentials = user.get_credentials()
     logging.info('Found existing auth credentials for user %s', user_name)
-    return {
-        'text': "You're authenticated 👍! As soon as we validate your TimePro credentials we'll lookup your timesheet ⏱"
-    }
+    return True, None
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_chat_name"])
