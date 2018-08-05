@@ -235,7 +235,7 @@ def sqs_process_handler(sqs_event):
     for record in sqs_event:
         event = json.loads(record.body)
         # TODO: Use a single event handler for both sync and async responses
-        if event['type'] == 'MESSAGE' and event['type'] == 'remind_everyone':
+        if event['type'] == 'MESSAGE' and event['message']['text'].lower() == 'remind_everyone':
             spaces = models.Space.scan()
             for space in spaces:
                 user = models.User.get(space.username)
