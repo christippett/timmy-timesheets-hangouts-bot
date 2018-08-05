@@ -26,6 +26,14 @@ output "dynamodb_team2_space_id" {
     value = "${aws_dynamodb_table.space.id}"
 }
 
+output "dynamodb_team2_timesheets_arn" {
+    value = "${aws_dynamodb_table.timesheets.arn}"
+}
+
+output "dynamodb_team2_timesheets_id" {
+    value = "${aws_dynamodb_table.timesheets.id}"
+}
+
 ###########################################################
 
 # KMS

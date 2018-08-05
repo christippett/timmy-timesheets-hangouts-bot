@@ -64,7 +64,8 @@ resource "aws_iam_policy" "timesheets_lambda" {
             ],
             "Resource": [
                 "${data.terraform_remote_state.dynamodb.dynamodb_team2_user_register_kms_key_arn}",
-                "${data.terraform_remote_state.sqs.sqs_kms_key_arn}",
+                "${data.terraform_remote_state.sqs.sqs_chat_kms_key_arn}",
+                "${data.terraform_remote_state.sqs.sqs_scrape_kms_key_arn}",
                 "${data.terraform_remote_state.sqs.sqs_ssm_kms_key_arn}",
                 "${data.terraform_remote_state.kms.s3_kms_key_arn}",
                 "${data.terraform_remote_state.kms.ssm_kms_key_arn}",
@@ -86,7 +87,10 @@ resource "aws_iam_policy" "timesheets_lambda" {
                 "sqs:ReceiveMessage",
                 "sqs:PurgeQueue"
             ],
-            "Resource":"${data.terraform_remote_state.sqs.sqs_arn}"
+            "Resource":[
+                "${data.terraform_remote_state.sqs.sqs_scrape_arn}",
+                "${data.terraform_remote_state.sqs.sqs_chat_arn}"
+            ]
         },
         {
             "Effect":"Allow",
@@ -115,7 +119,8 @@ resource "aws_iam_policy" "timesheets_lambda" {
             "Resource": [
                 "${data.terraform_remote_state.dynamodb.dynamodb_team2_user_arn}",
                 "${data.terraform_remote_state.dynamodb.dynamodb_team2_user_register_arn}",
-                "${data.terraform_remote_state.dynamodb.dynamodb_team2_space_arn}"
+                "${data.terraform_remote_state.dynamodb.dynamodb_team2_space_arn}",
+                "${data.terraform_remote_state.dynamodb.dynamodb_team2_timesheets_arn}"
             ]
         },
         {

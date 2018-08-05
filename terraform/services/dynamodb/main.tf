@@ -83,10 +83,34 @@ resource "aws_dynamodb_table" "space" {
     tags = "${data.terraform_remote_state.shared.global_tags}"
 }
 
+resource "aws_dynamodb_table" "timesheets" {
+    name           = "team2-timesheets"
+    read_capacity  = 20
+    write_capacity = 20
+    hash_key       = "id"
+    range_key      = "date"
+
+    attribute {
+        name = "id"
+        type = "S"
+    }
+
+    attribute {
+        name = "date"
+        type = "S"
+    }
+
+    server_side_encryption {
+        enabled = "true"
+    }
+
+    tags = "${data.terraform_remote_state.shared.global_tags}"
+}
+
 module "ssm_outputs_dynamoddb_user_register" {
     source                      = "../../modules/ssm"
     service_name                = "team2-dynamodb"
     qualified_path_to_outputs   = "/team2/service/dynamodb/dynamodb_terraform_outputs"
-    terraform_outputs           = "${map("team2-user-register-arn", aws_dynamodb_table.user_register.arn, "team2-user-register-id", aws_dynamodb_table.user_register.id, "team2-user-arn", aws_dynamodb_table.user.arn, "team2-user-id", aws_dynamodb_table.user.id, "team2-space-arn", aws_dynamodb_table.space.arn, "team2-space-id", aws_dynamodb_table.space.id)}"
+    terraform_outputs           = "${map("team2-user-register-arn", aws_dynamodb_table.user_register.arn, "team2-user-register-id", aws_dynamodb_table.user_register.id, "team2-user-arn", aws_dynamodb_table.user.arn, "team2-user-id", aws_dynamodb_table.user.id, "team2-space-arn", aws_dynamodb_table.space.arn, "team2-space-id", aws_dynamodb_table.space.id, "team2-timesheets-arn", aws_dynamodb_table.timesheets.arn, "team2-timesheets-id", aws_dynamodb_table.timesheets.id)}"
     global_tags                 = "${data.terraform_remote_state.shared.global_tags}"
 }
