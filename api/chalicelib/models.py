@@ -17,6 +17,7 @@ class Space(Model):
         table_name = 'team2-space'
         region = _DEFAULT_AWS_REGION
     name = UnicodeAttribute(hash_key=True)  # event['space']['name']
+    username = UnicodeAttribute(null=False)  # event['user']['name']
     type = UnicodeAttribute(null=False)
 
 

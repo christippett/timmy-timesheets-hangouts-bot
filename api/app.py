@@ -63,7 +63,7 @@ def bot_event():
 
     if event['type'] == 'ADDED_TO_SPACE':
         # Register new space in DB
-        space = models.Space(space_name, type=space_type)
+        space = models.Space(space_name, type=space_type, username=user_name)
         space.save()
         print(f'Registered {space_name} to DynamoDB')
         # Prompt registration
