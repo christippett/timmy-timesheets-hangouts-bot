@@ -67,50 +67,53 @@ def bot_event():
 
     if event['type'] == 'MESSAGE' or (
             event['type'] == 'ADDED_TO_SPACE' and 'message' in event):
-        message_text = event['message']['text']
-        if message_text.lower() == 'login':
+        message_text = event['message']['text'].lower()
+        if message_text == 'login':
             resp = check_user_authenticated(event)
-        elif message_text.lower() == 'get_last_weeks_timesheet':
+        elif message_text == 'remind_everyone':
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_name"], message=event)
+            resp = {'text': 'Sending a reminder to everyone!'}
+        elif message_text == 'get_last_weeks_timesheet':
             user = models.User.get(user_name)
             message_body = {
                 "username": user.username,
-                "message_text": message_text.lower()
+                "message_text": message_text
             }
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
             return {
                 'text': "I'm off to track down last week's timesheet!"
             }
-        elif message_text.lower() == 'get_current_timesheet':
+        elif message_text == 'get_current_timesheet':
             user = models.User.get(user_name)
             message_body = {
                 "username": user.username,
-                "message_text": message_text.lower()
+                "message_text": message_text
             }
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
             return {
                 'text': "I'm off to track down this week's timesheets!"
             }
-        elif message_text.lower() == 'get_proposed_timesheet':
+        elif message_text == 'get_proposed_timesheet':
             user = models.User.get(user_name)
             message_body = {
                 "username": user.username,
-                "message_text": message_text.lower()
+                "message_text": message_text
             }
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
             return {
                 'text': "Thinking cap is on! I'm off to divine this week's timesheet!"
             }
-        elif message_text.lower() == 'scrape_update_dynamo_db':
+        elif message_text == 'scrape_update_dynamo_db':
             user = models.User.get(user_name)
             message_body = {
                 "username": user.username,
-                "message_text": message_text.lower()
+                "message_text": message_text
             }
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
             return {
                 'text': "Going to update dynamodb with your hardwork"
             }
-        elif message_text.lower() == 'logout':
+        elif message_text == 'logout':
             logout_success = auth.logout(user_name)
             if logout_success:
                 return {'text': "You've been logged out and your TimePro credentials deleted."}
@@ -216,7 +219,7 @@ def check_user_authenticated(event: dict) -> dict:
     user_credentials = user.get_credentials()
     logging.info('Found existing auth credentials for user %s', user_name)
     return {
-        'text': "You're authenticated! As soon as we validate your TimePro credentials we'll lookup your timesheet ⏱ 👍"
+        'text': "You're authenticated 👍! As soon as we validate your TimePro credentials we'll lookup your timesheet ⏱"
     }
 
 
@@ -230,16 +233,20 @@ def sqs_chat_handler(event):
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_process_name"])
-def sqs_process_handler(event):
-    """
-        {
-            "username" : email,
-            "message_text" : string
-        }
-    :param event:
-    :return:
-    """
-    pass
+def sqs_process_handler(sqs_event):
+    for record in sqs_event:
+        event = json.loads(record.body)
+        if event['type'] == 'MESSAGE' and event['type'] == 'remind_everyone':
+            spaces = models.Space.scan()
+            for space in spaces:
+                user = models.User.get(space.username)
+                payload = {
+                    'space_name': space.name,
+                    'message': {
+                        'text': f"🔔 Hey {user.given_name}! Just a friendly reminder that it's time to do your timesheet 😄 🔔"
+                    }
+                }
+                utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_name"], message=payload)
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_scrape_name"])
