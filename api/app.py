@@ -170,11 +170,13 @@ def check_user_authenticated(event: dict) -> dict:
     return {'text': "You're authenticated and ready to go!"}
     # return produce_profile_message(user_credentials)
 
+
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_chat_name"])
 def sqs_chat_handler(event):
-
     for record in event:
-        print("Message body: %s" % record.body)
+        space_name = record.body.get('space_name')
+        message = record.body.get('message')
+        messages.send_async_message(message, space_name)
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_scrape_name"])
