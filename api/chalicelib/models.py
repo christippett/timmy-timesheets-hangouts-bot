@@ -22,17 +22,24 @@ class Space(Model):
     type = UnicodeAttribute(null=False)
 
     @classmethod
-    def get_space_for_email(cls, email: str):
+    def get_from_email(cls, email: str):
         # extract first member of scan, assuming first entry
         user_results = list(User.scan(filter_condition=(User.email==email)))
         if user_results:
             user = user_results[0]
         else:
-            return None
+            raise cls.DoesNotExist
         space_results = list(cls.scan(filter_condition=(cls.username==user.username)))
         if space_results:
             return space_results[0]
-        return None
+        raise cls.DoesNotExist
+
+    @classmethod
+    def get_from_username(cls, username: str):
+        space_results = list(cls.scan(filter_condition=(cls.username==username)))
+        if space_results:
+            return space_results[0]
+        raise cls.DoesNotExist
 
 
 class UserRegister(Model):
@@ -62,7 +69,7 @@ class User(Model):
 
     def get_api_and_login(self):
         if self._api is None:
-            user_register = UserRegister.get(self.email)
+            user_register = UserRegister.get(self.username)
             api = TimesheetAPI()
             api.login(customer_id=user_register.timepro_customer,
                     username=user_register.timepro_username,
