@@ -94,14 +94,9 @@ def logout(user_name: str):
         user_name (str): The identifier of the user.
     """
     try:
-        user = models.User.get(user_name)
         logging.info('Logging out user %s', user_name)
-        user_credentials = user.get_credentials()
+        user = models.User.get(user_name)
         user.delete()
-        requests.post(
-            'https://accounts.google.com/o/oauth2/revoke',
-            params={'token': user_credentials.token},
-            headers={'Content-Type': 'application/x-www-form-urlencoded'})
         return True
     except models.User.DoesNotExist:
         logging.info('Ignoring logout request for user %s', user_name)

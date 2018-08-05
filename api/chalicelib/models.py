@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import requests
 import google_auth_httplib2
 from pynamodb.models import Model
 from pynamodb.attributes import UnicodeAttribute, UTCDateTimeAttribute, JSONAttribute, ListAttribute
@@ -123,6 +124,14 @@ class User(Model):
     def save(self, **kwargs):
         self.updated_timestamp = datetime.now()
         return super().save(**kwargs)
+
+    def delete(self, **kwargs):
+        creds = self.get_credentials()
+        requests.post(
+            'https://accounts.google.com/o/oauth2/revoke',
+            params={'token': creds.token},
+            headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        return super().delete(**kwargs)
 
 
 class Timesheet(Model):
