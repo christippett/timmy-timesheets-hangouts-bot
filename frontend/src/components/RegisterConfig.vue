@@ -3,35 +3,47 @@
     <div class="columns is-vcentered">
       <mascot class="column is-5"></mascot>
       <div class="column is-6 is-offset-1">
-        <h1 class="title is-2">
-          Configure TimePro
-        </h1>
-        <h2 class="subtitle is-4">
-          Enter your TimePro Timesheets username and password.
-        </h2>
-        <br>
-        <b-notification type="is-danger" v-if="errorMessage" class="form-errors">
-          {{ errorMessage }}
-        </b-notification>
-        <section class="timepro-form">
-          <form @submit="checkForm">
-            <b-field>
-              <b-input placeholder="SERV" type="text" icon="domain" disabled v-model="customer">
-              </b-input>
-            </b-field>
-            <b-field>
-              <b-input placeholder="Username" type="username" icon="account" v-model="username">
-              </b-input>
-            </b-field>
-            <b-field>
-              <b-input placeholder="Password" type="password" icon="lock" v-model="password">
-              </b-input>
-            </b-field>
-            <div class="control">
-              <button type="submit" class="button" v-bind:class="[{ 'is-loading': formLoading }, buttonClass]" :disabled="buttonDisabled">{{ buttonLabel }}</button>
-            </div>
-          </form>
-        </section>
+        <transition name="fade">
+          <div v-if="configComplete">
+            <h1 class="title is-2">
+              You're all set up 🎉
+            </h1>
+            <h2 class="subtitle is-4">
+              Your TimePro credentials have been securely stored and ready for Timmy to help you with your timesheets. Hooray!
+            </h2>
+          </div>
+          <div v-else>
+            <h1 class="title is-2">
+              Configure TimePro
+            </h1>
+            <h2 class="subtitle is-4">
+              Enter your TimePro Timesheets username and password.
+            </h2>
+            <br>
+            <b-notification type="is-danger" v-if="errorMessage" class="form-errors">
+              {{ errorMessage }}
+            </b-notification>
+            <section class="timepro-form">
+              <form @submit="checkForm">
+                <b-field>
+                  <b-input placeholder="SERV" type="text" icon="domain" disabled v-model="customer">
+                  </b-input>
+                </b-field>
+                <b-field>
+                  <b-input placeholder="Username" type="username" icon="account" v-model="username">
+                  </b-input>
+                </b-field>
+                <b-field>
+                  <b-input placeholder="Password" type="password" icon="lock" v-model="password">
+                  </b-input>
+                </b-field>
+                <div class="control">
+                  <button type="submit" class="button" v-bind:class="[{ 'is-loading': formLoading }, buttonClass]" :disabled="buttonDisabled">{{ buttonLabel }}</button>
+                </div>
+              </form>
+            </section>
+          </div>
+        </transition>
       </div>
     </div>
   </div>
@@ -58,7 +70,8 @@ export default {
       buttonDisabled: false,
       buttonClass: 'is-primary',
       state: null,
-      errorMessage: ''
+      errorMessage: '',
+      configComplete: false
     }
   },
   methods: {
@@ -75,8 +88,7 @@ export default {
         .then((response) => {
           console.log(response.body)
           this.formLoading = false
-          this.buttonLabel = 'Success!'
-          this.buttonClass = 'is-success'
+          this.configComplete = True
         })
         .catch((response) => {
           console.log(response.body)
@@ -98,5 +110,11 @@ export default {
 }
 .form-errors {
   margin: 2rem 1rem;
+}
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .5s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
 }
 </style>

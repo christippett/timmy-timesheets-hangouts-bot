@@ -63,7 +63,7 @@ def bot_event():
 
     if event['type'] == 'ADDED_TO_SPACE':
         # Register new space in DB
-        space = models.Space(space_name, type=space_type)
+        space = models.Space(space_name, type=space_type, username=user_name)
         space.save()
         print(f'Registered {space_name} to DynamoDB')
         # Prompt registration
@@ -190,24 +190,39 @@ def sqs_scrape_handler(event):
     print(event)
     for record in event:
         payload = json.loads(record.body)
-        user_register = models.UserRegister.get(payload["username"])
+        email_username = payload["username"]
+        user_register = models.UserRegister.get(email_username)
         tm = TimesheetAPI()
         tm.login(customer_id=user_register.timepro_customer,
                  username=user_register.timepro_username,
                  password=user_register.timepro_password)
 
-        # DEFAULTS TO LAST MONTH
-        start_date = TODAY + relativedelta(day=1)
-        end_date = TODAY + relativedelta(day=31)
+        # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
+        week_offset = 1 if TODAY.weekday() >= 5 else 0
+        start_date = TODAY + relativedelta(weekday=MO(-1), weeks=week_offset - 1)
+        end_date = start_date + relativedelta(weekday=FR)
         timesheet = tm.get_timesheet(start_date=start_date, end_date=end_date)
+        date_entries = timesheet.date_entries()
 
-        for date, entries in timesheet.date_entries().items():
-            # LEFT IT HERE
+        for date, entries in date_entries.items():
+            timesheet_entry = models.Timesheet(email_username, date, entries=entries)
+            timesheet_entry.save()
+
 
 def get_space_for_email(email: str):
     # extract first member of scan, assuming first entry
-    username = [user.username for user in models.User.scan(filter_condition=(models.User.email==email))][0]
-    return models.Space.get(username)
+    username_results = [user.username for user in models.User.scan(filter_condition=(models.User.email==email))]
+    if username_results:
+        username = username_results[0]
+    else:
+        username = None
+
+    space_results = [space.name for space in models.Space.scan(filter_condition=(models.Space.username == username))]
+
+    if space_results:
+        return space_results[0]
+    return None
+
 
 
 # @app.on_sqs_message(queue='team2-sqs-app-data')
