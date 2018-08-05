@@ -2,9 +2,9 @@ import os
 import json
 from random import randint
 
-from oauth2client.service_account import ServiceAccountCredentials
+import google_auth_httplib2
+from google.oauth2 import service_account
 from apiclient import discovery
-from httplib2 import Http
 
 
 INTERACTIVE_TEXT_BUTTON_ACTION = "doTextButtonAction"
@@ -27,6 +27,7 @@ def send_async_message(message, space_name, thread_id=None, creds=None):
       spaceName: The URL of the Hangouts Chat room
 
     """
+
     if creds is None:
         creds = get_service_account()
 
@@ -36,12 +37,9 @@ def send_async_message(message, space_name, thread_id=None, creds=None):
         message['thread'] = thread_id
 
     scopes = ['https://www.googleapis.com/auth/chat.bot']
-    credentials = ServiceAccountCredentials
-    credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-        creds, scopes)
-    http_auth = credentials.authorize(Http())
-
-    chat = discovery.build('chat', 'v1', http=http_auth)
+    credentials = service_account.Credentials.from_service_account_info(creds, scopes=scopes)
+    http = google_auth_httplib2.AuthorizedHttp(credentials)
+    chat = discovery.build('chat', 'v1', http=http)
     chat.spaces().messages().create(
         parent=space_name,
         body=message).execute()
