@@ -281,7 +281,7 @@ def sqs_scrape_handler(event):
             models.Timesheet.bulk_create_from_date_entries(user=user, date_entries=date_entries)
             message = "Updated your work history in DyDb!!"
         elif message_text == "get_proposed_timesheet":
-            message = messages.create_timesheet_card(date_entries(), user=user, buttons=True)
+            message = messages.create_timesheet_card(date_entries, user=user, buttons=True)
         else:
             message = messages.create_timesheet_card(date_entries, user=user)
 
