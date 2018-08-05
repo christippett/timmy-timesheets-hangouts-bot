@@ -11,17 +11,23 @@
         </h2>
         <br>
         <section class="timepro-form">
-          <b-field>
-            <b-input placeholder="Username" type="email" icon="account">
-            </b-input>
-          </b-field>
-          <b-field>
-            <b-input placeholder="Password" type="password" icon="lock">
-            </b-input>
-          </b-field>
-          <div class="control">
-            <button class="button is-primary" @click="checkForm" v-bind:class="{ 'is-loading': formLoading }">Submit</button>
-          </div>
+          <form @submit="checkForm">
+            <b-field>
+              <b-input placeholder="SERV" type="text" icon="domain" disabled v-model="company">
+              </b-input>
+            </b-field>
+            <b-field>
+              <b-input placeholder="Username" type="username" icon="account" v-model="username">
+              </b-input>
+            </b-field>
+            <b-field>
+              <b-input placeholder="Password" type="password" icon="lock" v-model="password">
+              </b-input>
+            </b-field>
+            <div class="control">
+              <button type="submit" class="button" v-bind:class="[{ 'is-loading': formLoading }, buttonClass]" :disabled="buttonDisabled">{{ buttonLabel }}</button>
+            </div>
+          </form>
         </section>
       </div>
     </div>
@@ -33,22 +39,45 @@ import Mascot from '@/components/Mascot'
 
 export default {
   name: 'RegisterConfig',
-  beforeCreate: function () {
-    var state = this.$route.query.state
-    console.log(state)
-    if (state === undefined) {
+  created: function () {
+    this.state = this.$route.query.state
+    if (this.state === undefined) {
       this.$router.push('/')
     }
   },
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App',
-      formLoading: false
+      username: '',
+      password: '',
+      company: 'SERV',
+      formLoading: false,
+      buttonLabel: 'Submit',
+      buttonDisabled: false,
+      buttonClass: 'is-primary',
+      state: null
     }
   },
   methods: {
-    checkForm: function () {
-      this.formLoading = !this.formLoading
+    checkForm: function (e) {
+      e.preventDefault()
+      this.formLoading = this.buttonDisabled = true
+      let body = {
+        'username': this.username,
+        'password': this.password,
+        'company': this.company,
+        'state': this.state
+      }
+      this.$http.post('http://127.0.0.1:8000/timepro/config', body)
+        .then((response) => {
+          console.log(response.body)
+          this.formLoading = false
+          this.buttonLabel = 'Success!'
+          this.buttonClass = 'is-success'
+        })
+        .catch((response) => {
+          console.log('error')
+          this.formLoading = this.buttonDisabled = false
+        })
     }
   },
   components: {
