@@ -17,7 +17,7 @@ get_service_account = lambda: json.loads(
 
 
 
-def send_async_message(message, space_name, thread_id=None):
+def send_async_message(message, space_name, thread_id=None, creds=None):
     """Sends a response back to the Hangouts Chat room asynchronously.
 
     Args:
@@ -25,15 +25,18 @@ def send_async_message(message, space_name, thread_id=None):
       spaceName: The URL of the Hangouts Chat room
 
     """
+    if creds is None:
+        creds = get_service_account()
+
     # The following two lines of code update the thread that raised the event.
     # Delete them if you want to send the message in a new thread.
-    if thread_id != None:
+    if thread_id is not None:
         message['thread'] = thread_id
 
     scopes = ['https://www.googleapis.com/auth/chat.bot']
     credentials = ServiceAccountCredentials
     credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-        get_service_account(), scopes)
+        creds, scopes)
     http_auth = credentials.authorize(Http())
 
     chat = discovery.build('chat', 'v1', http=http_auth)
