@@ -14,7 +14,6 @@ from timepro_timesheet.api import TimesheetAPI, Timesheet
 from chalicelib import models, utils, auth, messages
 
 # Logging
-
 logging.basicConfig(
     level=logging.INFO,
     style='{',
@@ -26,7 +25,6 @@ parameters = store.get_parameters_by_path('/team2/', strip_path=True)
 EC2ParameterStore.set_env(parameters)  # add parameters to os.environ before calling Chalice()
 
 # Service Outputs
-
 SQS_PARAMETERS = json.loads(os.environ["sqs_terraform_outputs"])
 
 # Google credentials
@@ -224,8 +222,8 @@ def check_user_authenticated(event: dict) -> dict:
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_chat_name"])
-def sqs_chat_handler(event):
-    for record in event:
+def sqs_chat_handler(sqs_event):
+    for record in sqs_event:
         payload = json.loads(record.body)
         space_name = payload.get('space_name')
         message = payload.get('message')
@@ -251,15 +249,15 @@ def sqs_process_handler(sqs_event):
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_scrape_name"])
-def sqs_scrape_handler(event):
+def sqs_scrape_handler(sqs_event):
     """
         {
             "username" : chat username (users/12312312)
         }
-    :param event:
+    :param sqs_event:
     :return:
     """
-    for record in event:
+    for record in sqs_event:
         payload = json.loads(record.body)
         username = payload["username"]
         message_text = payload["message_text"]
