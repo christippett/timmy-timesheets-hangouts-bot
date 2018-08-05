@@ -15,14 +15,6 @@ provider "aws" {
     profile = "team2servian"
 }
 
-# NOTE: If we have a private hosted zone or domain is needed
-# then they go here. Otherwise then entries for each relevant
-# service
-
-# Hardcoded API Gateway record
-# records = ["https://sdr1ekqn43.execute-api.ap-southeast-2.amazonaws.com"]
-
-
 resource "aws_route53_zone" "primary" {
     name = "timesheets.servian.fun"
     tags = "${data.terraform_remote_state.shared.global_tags}"
