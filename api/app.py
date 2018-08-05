@@ -276,5 +276,5 @@ def sqs_scrape_handler(event):
 
         message = messages.create_timesheet_card(date_entries, user=user, buttons=True) \
             if message_text == "get_proposed_timesheet" else messages.create_timesheet_card(date_entries, user=user)
-        space_name = models.Space.get_from_username(username)
-        messages.send_async_message(message, space_name=space_name)
+        space = models.Space.get_from_username(username)
+        messages.send_async_message(message, space_name=space.name)
