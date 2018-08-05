@@ -81,7 +81,7 @@ def bot_event():
                 'text': "I'm off to track down last week's timesheet!"
             }
         elif message_text.lower() == 'get_current_timesheet':
-            username = models.User.get(user_name)
+            user = models.User.get(user_name)
             message_body = {
                 "username": user.username,
                 "message_text": message_text.lower()
