@@ -44,3 +44,4 @@ yarn-error.log*
 *credentials*
 service-account.json
 .env
+oauth_cipher.key
