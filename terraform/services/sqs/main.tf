@@ -27,6 +27,12 @@ module "kms_sqs_scrape" {
     global_tags     = "${data.terraform_remote_state.shared.global_tags}"
 }
 
+module "kms_sqs_process" {
+    source          = "../../modules/kms"
+    service_name    = "team2-kms-sqs-process"
+    global_tags     = "${data.terraform_remote_state.shared.global_tags}"
+}
+
 resource "aws_sqs_queue" "sqs_queue_chat" {
     name                                = "team2-sqs-chat"
     kms_master_key_id                   = "${module.kms_sqs_chat.kms_key_id}"
@@ -45,10 +51,19 @@ resource "aws_sqs_queue" "sqs_queue_scrape" {
     tags                                = "${data.terraform_remote_state.shared.global_tags}"
 }
 
+resource "aws_sqs_queue" "sqs_queue_process" {
+    name                                = "team2-sqs-process"
+    kms_master_key_id                   = "${module.kms_sqs_process.kms_key_id}"
+    kms_data_key_reuse_period_seconds   = 300
+    # Overriding default of 30 as lambda execution timeout is set at 60
+    visibility_timeout_seconds          = 120
+    tags                                = "${data.terraform_remote_state.shared.global_tags}"
+}
+
 module "ssm_sqs" {
     source                      = "../../modules/ssm"
     service_name                = "team2-sqs"
     qualified_path_to_outputs   = "/team2/service/sqs/sqs_terraform_outputs"
-    terraform_outputs           = "${map("sqs_chat_kms_arn", module.kms_sqs_chat.kms_key_arn, "sqs_queue_chat_arn", aws_sqs_queue.sqs_queue_chat.arn, "sqs_queue_chat_id", aws_sqs_queue.sqs_queue_chat.id, "sqs_queue_chat_name", aws_sqs_queue.sqs_queue_chat.name, "sqs_scrape_kms_arn", module.kms_sqs_scrape.kms_key_arn, "sqs_scrape_chat_arn", aws_sqs_queue.sqs_queue_scrape.arn, "sqs_queue_scrape_id", aws_sqs_queue.sqs_queue_scrape.id, "sqs_queue_scrape_name", aws_sqs_queue.sqs_queue_scrape.name)}"
+    terraform_outputs           = "${map("sqs_chat_kms_arn", module.kms_sqs_chat.kms_key_arn, "sqs_queue_chat_arn", aws_sqs_queue.sqs_queue_chat.arn, "sqs_queue_chat_id", aws_sqs_queue.sqs_queue_chat.id, "sqs_queue_chat_name", aws_sqs_queue.sqs_queue_chat.name, "sqs_scrape_kms_arn", module.kms_sqs_scrape.kms_key_arn, "sqs_scrape_chat_arn", aws_sqs_queue.sqs_queue_scrape.arn, "sqs_queue_scrape_id", aws_sqs_queue.sqs_queue_scrape.id, "sqs_queue_scrape_name", aws_sqs_queue.sqs_queue_scrape.name, "sqs_process_chat_arn", aws_sqs_queue.sqs_queue_process.arn, "sqs_queue_process_id", aws_sqs_queue.sqs_queue_process.id, "sqs_queue_process_name", aws_sqs_queue.sqs_queue_process.name)}"
     global_tags                 = "${data.terraform_remote_state.shared.global_tags}"
 }
