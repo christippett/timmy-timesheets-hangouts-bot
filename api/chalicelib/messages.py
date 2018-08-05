@@ -72,7 +72,7 @@ def create_initial_card():
     })
     widgets.append({
         'textParagraph': {
-            'text': "<b>get_proposed_timesheet</b><br/><p>Displays my Best Guess™ at your timesheet for this week.</p>"
+            'text': "<b>get_proposed_timesheet</b><br/><p>Displays my Best Guess™ at your timesheet for this week. You also have the option to make it real by updating your timesheet right from this here chat. Rock on 🤘</p>"
         }
     })
     widgets.append({
@@ -161,7 +161,7 @@ def create_timesheet_card(date_entries, user, buttons=False):
             'buttons': [
                 {
                     'textButton': {
-                        'text': 'UPDATE TIMESHEET',
+                        'text': '💾 UPDATE TIMESHEET',
                         'onClick': {
                             'action': {
                                 'actionMethodName': COPY_TIMESHEET_ACTION,
@@ -183,7 +183,7 @@ def create_timesheet_card(date_entries, user, buttons=False):
             'buttons': [
                 {
                     'textButton': {
-                        'text': 'VIEW ON TIMESHEETS.COM.AU',
+                        'text': '🌏 VIEW ON TIMESHEETS.COM.AU',
                         'onClick': {
                             'openLink': {
                                 'url': 'https://timesheets.com.au/login.asp',
@@ -212,7 +212,7 @@ def create_timesheet_success_card():
         'buttons': [
             {
                 'textButton': {
-                    'text': 'VIEW ON TIMESHEETS.COM.AU',
+                    'text': '🌏 VIEW ON TIMESHEETS.COM.AU',
                     'onClick': {
                         'openLink': {
                             'url': 'https://timesheets.com.au/login.asp',
