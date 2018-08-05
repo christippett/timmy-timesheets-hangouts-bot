@@ -45,17 +45,6 @@ def index():
     }
 
 
-# Routes
-@app.route('/test')
-def test():
-    request = app.current_request
-    logging.info(request.__dict__)
-    return {
-        'base_url': utils.get_base_url(request),
-        'current_url': utils.get_current_url(request)
-    }
-
-
 @app.route('/bot', methods=['POST'])
 def bot_event():
     """Handler for events from Hangouts Chat."""
