@@ -9,6 +9,8 @@ module "kms" {
     global_tags     = "${var.global_tags}"
 }
 
+# TODO: counditional module
+
 resource "aws_ssm_parameter" "ssm_kms" {
     name            = "${var.qualified_path_to_outputs}"
     description     = "Parameter store entry for the ${var.service_name} terraform outputs"
