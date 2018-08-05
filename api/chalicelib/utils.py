@@ -40,20 +40,11 @@ def get_current_url(current_request, params=True):
 
 
 
-def get_last_week_dates():
+def get_week_dates(weeks: int):
     today = date.today()
     # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
     week_offset = 1 if today.weekday() >= 5 else 0
-    start_date = today + relativedelta(weekday=MO(-1), weeks=week_offset - 1)
-    end_date = start_date + relativedelta(weekday=FR)
-    return start_date, end_date
-
-
-def get_this_week_dates():
-    today = date.today()
-    # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
-    week_offset = 2 if today.weekday() >= 5 else 1
-    start_date = today + relativedelta(weekday=MO(-1), weeks=week_offset - 1)
+    start_date = today + relativedelta(weekday=MO(-1), weeks=week_offset + weeks)
     end_date = start_date + relativedelta(weekday=FR)
     return start_date, end_date
 
