@@ -90,6 +90,16 @@ def bot_event():
             return {
                 'text': "I'm off to track down this week's timesheets!"
             }
+        elif message_text.lower() == 'get_proposed_timesheet':
+            username = models.User.get(user_name)
+            message_body = {
+                "username": username.email,
+                "message_text": message_text.lower()
+            }
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=message_body)
+            return {
+                'text': "Thinking cap is on! I'm off to divine this week's timesheet!"
+            }
         elif message_text.lower() == 'logout':
             logout_success = auth.logout(user_name)
             if logout_success:
@@ -236,12 +246,13 @@ def sqs_process_handler(event):
 
         # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
         start_date, end_date = utils.get_last_week_dates() \
-            if message_text == "get_last_weeks_timesheet" else utils.get_this_week_dates()
+            if message_text in ["get_last_weeks_timesheet"] else utils.get_this_week_dates()
 
         timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
         date_entries = timesheet.date_entries()
 
-        message = messages.create_timesheet_card(date_entries, user=user)
+        message = messages.create_timesheet_card(date_entries, user=user, buttons=True) \
+            if message_text == "get_proposed_timesheet" else messages.create_timesheet_card(date_entries, user=user)
         space_name = get_space_for_email(email_username)
         messages.send_async_message(message, space_name=space_name)
 
