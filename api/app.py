@@ -166,7 +166,7 @@ def timepro_config():
         oauth2_callback_args = auth.OAuth2CallbackCipher.decrypt(data['state'])
         username = oauth2_callback_args['user_name']
         user_register = models.UserRegister(
-            username
+            username,
             timepro_username=data['username'],
             timepro_password=data['password'],
             timepro_customer=data['customer'])
