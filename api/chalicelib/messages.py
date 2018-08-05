@@ -72,7 +72,7 @@ def create_initial_card():
     })
     widgets.append({
         'textParagraph': {
-            'text': "<b>get_proposed_timesheet</b><br/><p>Displays my Best Guess™ at this week's timesheet.</p>"
+            'text': "<b>get_proposed_timesheet</b><br/><p>Displays my Best Guess™ at your timesheet for this week.</p>"
         }
     })
     widgets.append({
