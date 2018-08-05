@@ -5,6 +5,7 @@ from pynamodb.models import Model
 from pynamodb.attributes import UnicodeAttribute, UTCDateTimeAttribute, JSONAttribute, ListAttribute
 from google.oauth2 import credentials
 from apiclient import discovery
+from timepro_timesheet.api import TimesheetAPI
 
 
 Credentials = credentials.Credentials
@@ -58,6 +59,21 @@ class User(Model):
     picture = UnicodeAttribute(null=True)
     google_id = UnicodeAttribute(null=True)
     updated_timestamp = UTCDateTimeAttribute(null=False)
+    _api = None
+
+    def get_api_and_login(self):
+        if self._api is None:
+            user_register = UserRegister.get(self.email)
+            api = TimesheetAPI()
+            api.login(customer_id=user_register.timepro_customer,
+                    username=user_register.timepro_username,
+                    password=user_register.timepro_password)
+            self._api = api  # cache api
+        return self._api
+
+    def get_timesheet(self, start_date, end_date):
+        api = self.get_api_and_login()
+        return api.get_timesheet(start_date=start_date, end_date=end_date)
 
     def get_credentials(self):
         return Credentials(**self.credentials)
