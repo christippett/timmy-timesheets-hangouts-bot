@@ -76,7 +76,7 @@ def bot_event():
                 "username": username.email,
                 "message_text": message_text.lower()
             }
-            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_name"], message=message_body)
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=message_body)
             return {
                 'text': "I'm off to track down last week's timesheet!"
             }
@@ -86,7 +86,7 @@ def bot_event():
                 "username": username.email,
                 "message_text": message_text.lower()
             }
-            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_name"], message=message_body)
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=message_body)
             return {
                 'text': "I'm off to track down this week's timesheets!"
             }
@@ -235,7 +235,7 @@ def sqs_process_handler(event):
                   password=user_register.timepro_password)
 
         # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
-        start_date, end_date = utils.get_last_weeks_timesheet() \
+        start_date, end_date = utils.get_last_week_dates() \
             if message_text == "get_last_weeks_timesheet" else utils.get_this_week_dates()
 
         timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
