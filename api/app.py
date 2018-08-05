@@ -245,7 +245,7 @@ def sqs_process_handler(sqs_event):
                 if parameters[0]['key'] == 'start_date':
                     start_date = dateparser(parameters[0]['value'])
                 if parameters[1]['key'] == 'end_date':
-                    end_date = dateparser(parameters[0]['value'])
+                    end_date = dateparser(parameters[1]['value'])
                 if start_date is None or end_date is None:
                     return
                 user = models.User.get(user_name)
