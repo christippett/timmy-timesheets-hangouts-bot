@@ -71,7 +71,7 @@ export default {
         'customer': this.customer,
         'state': this.state
       }
-      this.$http.post('https://api.timesheets.servian.fun/timepro/config', body)
+      this.$http.post('https://api.timesheets.servian.fun/v1/timepro/config', body)
         .then((response) => {
           console.log(response.body)
           this.formLoading = false
