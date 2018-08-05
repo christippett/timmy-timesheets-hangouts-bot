@@ -71,7 +71,7 @@ def bot_event():
         if message_text == 'login':
             resp = check_user_authenticated(event)
         elif message_text == 'remind_everyone':
-            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_name"], message=event)
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=event)
             resp = {'text': 'Sending a reminder to everyone!'}
         elif message_text == 'get_last_weeks_timesheet':
             user = models.User.get(user_name)
@@ -236,6 +236,7 @@ def sqs_chat_handler(event):
 def sqs_process_handler(sqs_event):
     for record in sqs_event:
         event = json.loads(record.body)
+        # TODO: Use a single event handler for both sync and async responses
         if event['type'] == 'MESSAGE' and event['type'] == 'remind_everyone':
             spaces = models.Space.scan()
             for space in spaces:
@@ -246,7 +247,7 @@ def sqs_process_handler(sqs_event):
                         'text': f"🔔 Hey {user.given_name}! Just a friendly reminder that it's time to do your timesheet 😄 🔔"
                     }
                 }
-                utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_name"], message=payload)
+                utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_id"], message=payload)
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_scrape_name"])
