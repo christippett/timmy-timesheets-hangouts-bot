@@ -150,7 +150,7 @@ def create_timesheet_card(date_entries, user, buttons=False):
             'buttons': [
                 {
                     'textButton': {
-                        'text': 'COPY TIMESHEET FORWARD',
+                        'text': 'UPDATE TIMESHEET',
                         'onClick': {
                             'action': {
                                 'actionMethodName': COPY_TIMESHEET_ACTION,
@@ -172,7 +172,7 @@ def create_timesheet_card(date_entries, user, buttons=False):
             'buttons': [
                 {
                     'textButton': {
-                        'text': 'GO TO TIMESHEETS.COM.AU',
+                        'text': 'VIEW ON TIMESHEETS.COM.AU',
                         'onClick': {
                             'openLink': {
                                 'url': 'https://timesheets.com.au/login.asp',
