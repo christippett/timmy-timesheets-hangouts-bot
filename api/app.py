@@ -71,10 +71,11 @@ def bot_event():
         if message_text.lower() == 'login':
             resp = check_user_authenticated(event)
         elif message_text.lower() == 'logout':
-            auth.logout(user_name)
-            return {
-                'text': "You've been logged out and your TimePro credentials deleted."
-            }
+            logout_success = auth.logout(user_name)
+            if logout_success:
+                return {'text': "You've been logged out and your TimePro credentials deleted."}
+            else:
+                return {'text': 'You are currently not logged in.'}
         else:
             resp = messages.create_card_response(message_text)
 
