@@ -68,6 +68,8 @@ def bot_event():
         message_text = event['message']['text'].lower()
         if message_text == 'login':
             resp = check_user_authenticated(event)
+        elif message_text == 'help':
+            resp = messages.create_initial_card()
         elif message_text in ['remind_everyone', 'remind_everyone_meme']:
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=event)
             resp = {'text': 'Sending a reminder to everyone!'}
