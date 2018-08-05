@@ -268,7 +268,7 @@ def sqs_scrape_handler(event):
         if message_text in ["get_last_weeks_timesheet", "scrape_update_dynamo_db", "get_proposed_timesheet"]:
             start_date, end_date = utils.get_week_dates(weeks=-1)
         else:
-            start_date, end_date = utils.get_this_week_dates(weeks=0)
+            start_date, end_date = utils.get_week_dates(weeks=0)
 
         timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
         if message_text == "get_proposed_timesheet":
