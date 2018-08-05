@@ -172,8 +172,9 @@ def check_user_authenticated(event: dict) -> dict:
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_chat_name"])
 def sqs_chat_handler(event):
     for record in event:
-        space_name = record.body.get('space_name')
-        message = record.body.get('message')
+        payload = json.loads(record.body)
+        space_name = payload.get('space_name')
+        message = payload.get('message')
         messages.send_async_message(message, space_name)
 
 
