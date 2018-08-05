@@ -72,8 +72,8 @@ class User(Model):
             user_register = UserRegister.get(self.username)
             api = TimesheetAPI()
             api.login(customer_id=user_register.timepro_customer,
-                    username=user_register.timepro_username,
-                    password=user_register.timepro_password)
+                      username=user_register.timepro_username,
+                      password=user_register.timepro_password)
             self._api = api  # cache api
         return self._api
 
