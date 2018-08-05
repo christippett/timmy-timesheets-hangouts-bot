@@ -91,9 +91,9 @@ def bot_event():
                 'text': "I'm off to track down this week's timesheets!"
             }
         elif message_text.lower() == 'get_proposed_timesheet':
-            username = models.User.get(user_name)
+            user = models.User.get(user_name)
             message_body = {
-                "username": username.email,
+                "username": user.username,
                 "message_text": message_text.lower()
             }
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
@@ -101,9 +101,9 @@ def bot_event():
                 'text': "Thinking cap is on! I'm off to divine this week's timesheet!"
             }
         elif message_text.lower() == 'scrape_update_dynamo_db':
-            username = models.User.get(user_name)
+            user = models.User.get(user_name)
             message_body = {
-                "username": username.email,
+                "username": user.username,
                 "message_text": message_text.lower()
             }
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
