@@ -3,10 +3,9 @@ import logging
 
 from chalice import Chalice, Response, CORSConfig
 from google.oauth2 import credentials
-import google_auth_httplib2
-from apiclient import discovery
 
 from ssm_parameter_store import EC2ParameterStore
+from timepro_timesheet.api import TimesheetAPI
 
 from chalicelib import models, utils, auth, messages
 
@@ -119,6 +118,24 @@ def oauth2_callback():
 @app.route('/timepro/config', methods=['POST'], cors=cors_config)
 def timepro_config():
     request = app.current_request
+    data = request.json_body
+    api = TimesheetAPI()
+    try:
+        api.login(
+            customer_id=data['customer'],
+            username=data['username'],
+            password=data['password'])
+        oauth2_callback_args = auth.OAuth2CallbackCipher.decrypt(data['state'])
+        username = oauth2_callback_args['user_name']
+        user_register = models.UserRegister(username)
+        user_register.timepro_username = data['username']
+        user_register.timepro_password = data['password']
+        user_register.timepro_customer = data['customer']
+        user_register.save()
+    except api.LoginError as e:
+        return Response(body={'error': str(e)}, status_code=403)
+    except Exception as e:
+        return Response(body={'error': 'An error occured when validating TimePro credentials'}, status_code=400)
     return request.json_body
 
 

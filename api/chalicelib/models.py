@@ -24,13 +24,17 @@ class UserRegister(Model):
     class Meta:
         table_name = 'team2-user-register'
         region = _DEFAULT_AWS_REGION
+    username = UnicodeAttribute(hash_key=True)  # event['user']['name']
+    timepro_username = UnicodeAttribute(null=False)
+    timepro_password = UnicodeAttribute(null=False)
+    timepro_customer = UnicodeAttribute(null=False)
 
 
 class User(Model):
     class Meta:
         table_name = 'team2-user'
         region = _DEFAULT_AWS_REGION
-    name = UnicodeAttribute(hash_key=True)  # event['user']['name']
+    username = UnicodeAttribute(hash_key=True)  # event['user']['name']
     credentials = JSONAttribute(null=False)
     display_name = UnicodeAttribute(null=True)
     given_name = UnicodeAttribute(null=True)

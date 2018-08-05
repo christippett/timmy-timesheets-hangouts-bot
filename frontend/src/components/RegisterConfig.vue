@@ -10,10 +10,13 @@
           Enter your TimePro Timesheets username and password.
         </h2>
         <br>
+        <b-notification type="is-danger" v-if="errorMessage || true" class="form-errors">
+          {{ errorMessage }}
+        </b-notification>
         <section class="timepro-form">
           <form @submit="checkForm">
             <b-field>
-              <b-input placeholder="SERV" type="text" icon="domain" disabled v-model="company">
+              <b-input placeholder="SERV" type="text" icon="domain" disabled v-model="customer">
               </b-input>
             </b-field>
             <b-field>
@@ -49,12 +52,13 @@ export default {
     return {
       username: '',
       password: '',
-      company: 'SERV',
+      customer: 'SERV',
       formLoading: false,
       buttonLabel: 'Submit',
       buttonDisabled: false,
       buttonClass: 'is-primary',
-      state: null
+      state: null,
+      errorMessage: ''
     }
   },
   methods: {
@@ -64,7 +68,7 @@ export default {
       let body = {
         'username': this.username,
         'password': this.password,
-        'company': this.company,
+        'customer': this.customer,
         'state': this.state
       }
       this.$http.post('http://127.0.0.1:8000/timepro/config', body)
@@ -75,7 +79,8 @@ export default {
           this.buttonClass = 'is-success'
         })
         .catch((response) => {
-          console.log('error')
+          console.log(response.body)
+          this.errorMessage = response.body.error
           this.formLoading = this.buttonDisabled = false
         })
     }
@@ -90,5 +95,8 @@ export default {
 <style scoped>
 .timepro-form {
   padding: 0 5rem;
+}
+.form-errors {
+  margin: 2rem 1rem;
 }
 </style>
