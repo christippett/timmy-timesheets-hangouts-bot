@@ -131,6 +131,14 @@ def create_timesheet_card(date_entries, user, buttons=False):
                 'text': f'<b>{date_label}</b>'
             }
         })
+        if not entries:
+            widgets.append({
+                'keyValue': {
+                    'topLabel': 'Incomplete',
+                    'content': '0.0',
+                    'icon': 'CLOCK'
+                }
+            })
         for entry in entries:
             widgets.append({
                 'keyValue': {
