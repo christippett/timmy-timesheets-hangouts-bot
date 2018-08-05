@@ -121,26 +121,9 @@ def bot_event():
             resp = messages.create_card_response(message_text)
 
     elif event['type'] == 'CARD_CLICKED':
-        action_name = event['action']['actionMethodName']
-        parameters = event['action']['parameters']
-        if action_name == messages.COPY_TIMESHEET_ACTION:
-            # TODO: Put this all in an SQS queue so we can return
-            # a synchronous response to the chat ASAP
-            start_date = None
-            end_date = None
-            if parameters[0]['key'] == 'start_date':
-                start_date = dateparser(parameters[0]['value'])
-            if parameters[1]['key'] == 'end_date':
-                end_date = dateparser(parameters[0]['value'])
-            if start_date is None or end_date is None:
-                return
-            user = models.User.get(user_name)
-            timesheet = user.get_timesheet(start_date=start_date, end_date=end_date)  # TODO: Get from DynamoDB instead
-            new_timesheet = utils.copy_timesheet(timesheet, add_days=7)
-            api = user.get_api_and_login()
-            api.post_timesheet(new_timesheet)
-            resp = messages.create_timesheet_card(new_timesheet.date_entries(), user=user)
-            resp['actionResponse'] = 'UPDATE_MESSAGE'
+        utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=event)
+        resp = messages.create_timesheet_success_card()
+        resp['actionResponse'] = {'type': 'UPDATE_MESSAGE'}
 
     elif event['type'] == 'REMOVED_FROM_SPACE':
         # Delete space from DB
@@ -234,6 +217,7 @@ def sqs_chat_handler(sqs_event):
 def sqs_process_handler(sqs_event):
     for record in sqs_event:
         event = json.loads(record.body)
+        user_name = event['user']['name']
         # TODO: Use a single event handler for both sync and async responses
         if event['type'] == 'MESSAGE' and event['message']['text'].lower() in ['remind_everyone', 'remind_everyone_meme']:
             spaces = models.Space.scan()
@@ -248,6 +232,25 @@ def sqs_process_handler(sqs_event):
                     'message': message
                 }
                 utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_id"], message=payload)
+        elif event['type'] == 'CARD_CLICKED':
+            action_name = event['action']['actionMethodName']
+            parameters = event['action']['parameters']
+            if action_name == messages.COPY_TIMESHEET_ACTION:
+                # TODO: Put this all in an SQS queue so we can return
+                # a synchronous response to the chat ASAP
+                start_date = None
+                end_date = None
+                if parameters[0]['key'] == 'start_date':
+                    start_date = dateparser(parameters[0]['value'])
+                if parameters[1]['key'] == 'end_date':
+                    end_date = dateparser(parameters[0]['value'])
+                if start_date is None or end_date is None:
+                    return
+                user = models.User.get(user_name)
+                timesheet = user.get_timesheet(start_date=start_date, end_date=end_date)  # TODO: Get from DynamoDB instead
+                new_timesheet = utils.copy_timesheet(timesheet, add_days=7)
+                api = user.get_api_and_login()
+                api.post_timesheet(new_timesheet)
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_scrape_name"])

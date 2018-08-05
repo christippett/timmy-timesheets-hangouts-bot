@@ -104,6 +104,7 @@ def create_reminder_meme():
     response['cards'] = cards
     return response
 
+
 def create_timesheet_card(date_entries, user, buttons=False):
     response = dict()
     cards = list()
@@ -171,7 +172,7 @@ def create_timesheet_card(date_entries, user, buttons=False):
             'buttons': [
                 {
                     'textButton': {
-                        'text': 'VIEW TIMESHEET',
+                        'text': 'GO TO TIMESHEETS.COM.AU',
                         'onClick': {
                             'openLink': {
                                 'url': 'https://timesheets.com.au/login.asp',
@@ -186,6 +187,33 @@ def create_timesheet_card(date_entries, user, buttons=False):
     response['cards'] = cards
     return response
 
+
+def create_timesheet_success_card():
+    response = dict()
+    cards = list()
+    widgets = list()
+    widgets.append({
+        'textParagraph' : {
+            'text': 'Timesheet updated sucessfully 🎉'
+        }
+    })
+    widgets.append({
+        'buttons': [
+            {
+                'textButton': {
+                    'text': 'VIEW ON TIMESHEETS.COM.AU',
+                    'onClick': {
+                        'openLink': {
+                            'url': 'https://timesheets.com.au/login.asp',
+                        }
+                    }
+                }
+            }
+        ]
+    })
+    cards.append({ 'sections': [{ 'widgets': widgets }]})
+    response['cards'] = cards
+    return response
 
 def create_card_response(event_message):
     """Creates a card response based on the message sent in Hangouts Chat.
