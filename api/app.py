@@ -3,7 +3,7 @@ import logging
 import os
 
 import boto3
-from chalice import Chalice, Response, CORSConfig
+from chalice import Chalice, Response
 from google.oauth2 import credentials
 
 from ssm_parameter_store import EC2ParameterStore
@@ -36,11 +36,6 @@ Credentials = credentials.Credentials
 
 # Initiate app
 app = Chalice(app_name='timesheet-bot', debug=True)
-cors_config = CORSConfig(
-    allow_origin='*',
-    max_age=600,
-    allow_credentials=True
-)
 
 
 # Routes
