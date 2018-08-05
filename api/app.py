@@ -251,7 +251,7 @@ def sqs_process_handler(sqs_event):
                 if start_date is None or end_date is None:
                     return
                 user = models.User.get(user_name)
-                print(f'USER NAME: {user.name}')
+                print(f'USER NAME: {user.display_name}')
                 timesheet = user.get_timesheet(start_date=start_date, end_date=end_date)  # TODO: Get from DynamoDB instead
                 new_timesheet = utils.copy_timesheet(timesheet, add_days=7)
                 api = user.get_api_and_login()
