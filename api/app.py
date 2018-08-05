@@ -76,7 +76,7 @@ def bot_event():
                 "username": username.email,
                 "message_text": message_text.lower()
             }
-            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=message_body)
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
             return {
                 'text': "I'm off to track down last week's timesheet!"
             }
@@ -86,7 +86,7 @@ def bot_event():
                 "username": username.email,
                 "message_text": message_text.lower()
             }
-            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=message_body)
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
             return {
                 'text': "I'm off to track down this week's timesheets!"
             }
@@ -96,9 +96,19 @@ def bot_event():
                 "username": username.email,
                 "message_text": message_text.lower()
             }
-            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=message_body)
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
             return {
                 'text': "Thinking cap is on! I'm off to divine this week's timesheet!"
+            }
+        elif message_text.lower() == 'scrape_update_dynamo_db':
+            username = models.User.get(user_name)
+            message_body = {
+                "username": username.email,
+                "message_text": message_text.lower()
+            }
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
+            return {
+                'text': "Going to update dynamodb with your hardwork"
             }
         elif message_text.lower() == 'logout':
             logout_success = auth.logout(user_name)
@@ -229,24 +239,7 @@ def sqs_process_handler(event):
     :param event:
     :return:
     """
-    for record in event:
-        payload = json.loads(record.body)
-        username = payload["username"]
-        message_text = payload["message_text"]
-        user = models.User.get(username)
-        api = user.get_api_and_login()
-
-        # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
-        start_date, end_date = utils.get_last_week_dates() \
-            if message_text in ["get_last_weeks_timesheet"] else utils.get_this_week_dates()
-
-        timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
-        date_entries = timesheet.date_entries()
-
-        message = messages.create_timesheet_card(date_entries, user=user, buttons=True) \
-            if message_text == "get_proposed_timesheet" else messages.create_timesheet_card(date_entries, user=user)
-        space_name = models.Space.get_from_username(username)
-        messages.send_async_message(message, space_name=space_name)
+    pass
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_scrape_name"])
@@ -261,21 +254,27 @@ def sqs_scrape_handler(event):
     for record in event:
         payload = json.loads(record.body)
         username = payload["username"]
+        message_text = payload["message_text"]
         user = models.User.get(username)
         api = user.get_api_and_login()
 
+
         # Get last week -- if Saturday or Sunday, treat "last week" as the week just been
-        start_date, end_date = utils.get_this_week_dates()
+        start_date, end_date = utils.get_last_week_dates() \
+            if message_text in ["get_last_weeks_timesheet", "scrape_update_dynamo_db"] else utils.get_this_week_dates()
 
         timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
         date_entries = timesheet.date_entries()
 
-        print(f'Looping through timesheet dates for user: {username}')
-        for date, entries in date_entries.items():
-            print(f'Getting date: {date}')
-            json_entries = {'entries': entries}
-            timesheet_entry = models.Timesheet(username, date, entries=json_entries, email=user.email)
-            timesheet_entry.save()
-        message = messages.create_timesheet_card(date_entries, user=user)
+        if message_text == "scrape_update_dynamo_db":
+            print(f'Looping through timesheet dates for user: {username}')
+            for date, entries in date_entries.items():
+                print(f'Getting date: {date}')
+                json_entries = {'entries': entries}
+                timesheet_entry = models.Timesheet(username, date, entries=json_entries, email=user.email)
+                timesheet_entry.save()
+
+        message = messages.create_timesheet_card(date_entries, user=user, buttons=True) \
+            if message_text == "get_proposed_timesheet" else messages.create_timesheet_card(date_entries, user=user)
         space_name = models.Space.get_from_username(username)
         messages.send_async_message(message, space_name=space_name)
