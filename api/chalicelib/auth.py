@@ -133,4 +133,4 @@ def on_oauth2_callback(request):
         user_name,
         redirect_url)
     requests.get(redirect_url)  # complete Chat flow
-    return  # redirect after callback completes
+    return user # redirect after callback completes

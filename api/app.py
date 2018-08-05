@@ -101,14 +101,14 @@ def bot_event():
 @app.route('/auth/callback')
 def oauth2_callback():
     request = app.current_request
-    if request.query_params.get('error'):
-        redirect_location = 'https://timesheets.servian.fun/register/error'
+    if request.query_params and request.query_params.get('error'):
+        redirect_location = 'https://timesheets.servian.fun/register/error?error=123&state=abc'
     else:
-        auth.on_oauth2_callback(request)
+        user = auth.on_oauth2_callback(request)
         redirect_location = 'https://timesheets.servian.fun/register/config'
-    state = request.query_params.get('state')
-    if state:
-        redirect_location + '?state=' + state
+    if request.query_params and request.query_params.get('state'):
+        state = request.query_params.get('state')
+        redirect_location += '?state=' + state
     return Response(
         status_code=301,
         body='',
