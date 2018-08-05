@@ -55,24 +55,29 @@ def create_initial_card():
     header = {
         'header': {
             'title': 'Timmy Timesheets Cheatsheet',
-            'subtitle': "Hi. Here's a few helpful commands..."
+            'subtitle': "Hi. Here's a few helpful commands 💡"
         }
     }
     cards.append(header)
 
     widgets.append({
         'textParagraph': {
-            'text': '<b>get_current_timesheet</b><br/><p>This displays your timesheet for the current week</p>'
+            'text': '<b>get_current_timesheet</b><br/><p>Displays your timesheet for the current week.</p>'
         }
     })
     widgets.append({
         'textParagraph': {
-            'text': "<b>get_last_weeks_timesheet</b><br/><p>This displays last week's timesheet</p>"
+            'text': "<b>get_last_weeks_timesheet</b><br/><p>Displays last week's timesheet.</p>"
         }
     })
     widgets.append({
         'textParagraph': {
-            'text': "<b>get_proposed_timesheet</b><br/><p>This displays my best guess at this week's timesheet</p>"
+            'text': "<b>get_proposed_timesheet</b><br/><p>Displays my Best Guess™ at this week's timesheet.</p>"
+        }
+    })
+    widgets.append({
+        'textParagraph': {
+            'text': "<b>help</b><br/><p>Displays this cheatsheat again.</p>"
         }
     })
 
