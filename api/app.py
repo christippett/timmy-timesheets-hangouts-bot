@@ -276,19 +276,14 @@ def sqs_scrape_handler(event):
 
         date_entries = timesheet.date_entries()
 
-        message = None
-
         if message_text == "scrape_update_dynamo_db":
             print(f'Looping through timesheet dates for user: {username}')
             models.Timesheet.bulk_create_from_date_entries(user=user, date_entries=date_entries)
+            message = "Updated your work history in DyDb!!"
         elif message_text == "get_proposed_timesheet":
             message = messages.create_timesheet_card(date_entries(), user=user, buttons=True)
         else:
             message = messages.create_timesheet_card(date_entries, user=user)
 
         space = models.Space.get_from_username(username)
-        if not message:
-            return {
-                "Updated your work history in DyDb!!"
-            }
         messages.send_async_message(message, space_name=space.name)
