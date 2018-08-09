@@ -1,7 +1,7 @@
 chalice
 pynamodb
 ssm-parameter-store
-hangouts-helper
+hangouts-helper>=18.8.2
 cryptography
 requests
 timepro-timesheet
