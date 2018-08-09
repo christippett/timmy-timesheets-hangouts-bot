@@ -1,10 +1,17 @@
 import os
 import json
 from random import randint
+from enum import Enum
 
 import google_auth_httplib2
 from google.oauth2 import service_account
 from apiclient import discovery
+
+from hangouts_helper.message import (Message, Card, CardHeader, Section,
+    Image, KeyValue, ButtonList, TextButton, ImageButton, TextParagraph,
+    ImageStyle, Icon)
+
+from . import utils
 
 
 INTERACTIVE_TEXT_BUTTON_ACTION = "doTextButtonAction"
@@ -14,9 +21,17 @@ INTERACTIVE_BUTTON_PARAMETER_KEY = "param_key"
 BOT_HEADER = 'Card Bot Python'
 
 
+class ActionMethod(Enum):
+    COPY_TIMESHEET = 'COPY_TIMESHEET'
+    SHOW_THIS_WEEKS_TIMESHEET = 'SHOW_THIS_WEEKS_TIMESHEET'
+    SHOW_LAST_WEEKS_TIMESHEET = 'SHOW_LAST_WEEKS_TIMESHEET'
+    PROPOSE_TIMESHEET = 'PROPOSE_TIMESHEET'
+    LOGIN = 'LOGIN'
+    HELP = 'HELP'
+
+
 get_service_account = lambda: json.loads(
     os.environ.get('google_auth_service_account'))
-
 
 
 def send_async_message(message, space_name, thread_id=None, creds=None):
@@ -45,67 +60,55 @@ def send_async_message(message, space_name, thread_id=None, creds=None):
         body=message).execute()
 
 
-def create_initial_card():
-    response = dict()
-    cards = list()
-    widgets = list()
-
-    # Create header
-
-    header = {
-        'header': {
-            'title': 'Timmy Timesheets Cheatsheet',
-            'subtitle': "Hi. Here's a few helpful commands 💡"
-        }
-    }
-    cards.append(header)
-
-    widgets.append({
-        'textParagraph': {
-            'text': '<b>get_current_timesheet</b><br/><p>Displays your timesheet for the current week.</p>'
-        }
-    })
-    widgets.append({
-        'textParagraph': {
-            'text': "<b>get_last_weeks_timesheet</b><br/><p>Displays last week's timesheet.</p>"
-        }
-    })
-    widgets.append({
-        'textParagraph': {
-            'text': "<b>get_proposed_timesheet</b><br/><p>Displays my Best Guess™ at your timesheet for this week. You also have the option to make it real by updating your timesheet right from this here chat. Rock on 🤘</p>"
-        }
-    })
-    widgets.append({
-        'textParagraph': {
-            'text': "<b>help</b><br/><p>Displays this cheatsheat again.</p>"
-        }
-    })
-
-    cards.append({ 'sections': [{ 'widgets': widgets }]})
-
-    response['cards'] = cards
-    return response
+def create_action_card():
+    this_week_start, this_week_end = utils.get_week_dates(0)
+    last_week_start, last_week_end = utils.get_week_dates(-1)
+    message = Message()
+    message.add_card(
+        Card(
+            CardHeader(
+                title="Timmy's Action Menu",
+                subtitle="Top tips for Timmy Timesheets",
+                image_url='https://timesheets.servian.fun/static/img/timmy.2fafd88.png',
+                image_style=ImageStyle.AVATAR),
+            Section(
+                ButtonList(
+                    TextButton(text="LOGIN").add_action(ActionMethod.LOGIN)),
+                TextParagraph("Login and configure integration with TimePro")),
+            Section(
+                ButtonList(
+                    TextButton(text="VIEW LAST WEEK'S TIMESHEET").add_action(
+                        action_method=ActionMethod.SHOW_LAST_WEEKS_TIMESHEET,
+                        parameters={'start_date': str(this_week_start), 'end_date': str(this_week_end)})),
+                TextParagraph("Show last week's timesheet")),
+            Section(
+                ButtonList(
+                    TextButton(text="VIEW THIS WEEK'S TIMESHEET").add_action(
+                        action_method=ActionMethod.SHOW_THIS_WEEKS_TIMESHEET,
+                        parameters={'start_date': str(last_week_start), 'end_date': str(last_week_end)})),
+                TextParagraph("Show this week's timesheet")),
+            Section(
+                ButtonList(
+                    TextButton(text="PROPOSE THIS WEEK'S TIMESHEET").add_action(
+                        action_method=ActionMethod.PROPOSE_TIMESHEET,
+                        parameters={'start_date': str(this_week_start), 'end_date': str(this_week_end)})),
+                TextParagraph(
+                    "Show Timmy's Best Guess™ at this week's timesheet. "
+                    "You also have the option to make it real by updating your timesheet "
+                    "right from this here chat. Rock on 🤘")),
+            Section(
+                TextParagraph('Bring up this menu anytime by typing <b>help</b>')
+            )
+    ))
+    return message.output()
 
 
 def create_reminder_meme():
-    response = dict()
-    cards = list()
-    widgets = list()
     random_integer = randint(0, 4) + 1
     meme_url = f'https://timesheets.servian.fun/images/{random_integer}.jpg'
-    widgets.append({
-        'image': {
-            'imageUrl': meme_url,
-            'onClick': {
-                'openLink': {
-                    'url': 'https://timesheets.com.au/login.asp'
-                }
-            }
-        }
-    })
-    cards.append({ 'sections': [{ 'widgets': widgets }]})
-    response['cards'] = cards
-    return response
+    message = Message()
+    message.add_card(Card(Section(Image(image_url=meme_url))))
+    return message.output()
 
 
 def create_timesheet_card(date_entries, user, title='Timesheet Summary', buttons=False):
@@ -179,20 +182,6 @@ def create_timesheet_card(date_entries, user, title='Timesheet Summary', buttons
                 }
             ]
         })
-        # button_widgets.append({
-        #     'buttons': [
-        #         {
-        #             'textButton': {
-        #                 'text': 'GO TO TIMESHEETS.COM.AU',
-        #                 'onClick': {
-        #                     'openLink': {
-        #                         'url': 'https://timesheets.com.au/login.asp',
-        #                     }
-        #                 }
-        #             }
-        #         }
-        #     ]
-        # })
         cards.append({ 'sections': [{ 'widgets': button_widgets }]})
 
     response['cards'] = cards
@@ -200,231 +189,24 @@ def create_timesheet_card(date_entries, user, title='Timesheet Summary', buttons
 
 
 def create_timesheet_success_card():
-    response = dict()
-    cards = list()
-    widgets = list()
-    widgets.append({
-        'textParagraph' : {
-            'text': 'Timesheet updated sucessfully 🎉'
-        }
-    })
-    widgets.append({
-        'buttons': [
-            {
-                'textButton': {
-                    'text': 'VIEW ON TIMESHEETS.COM.AU',
-                    'onClick': {
-                        'openLink': {
-                            'url': 'https://timesheets.com.au/login.asp',
-                        }
-                    }
-                }
-            }
-        ]
-    })
-    cards.append({ 'sections': [{ 'widgets': widgets }]})
-    response['cards'] = cards
-    return response
-
-def create_card_response(event_message):
-    """Creates a card response based on the message sent in Hangouts Chat.
-
-    See the reference for JSON keys and format for cards:
-    https://developers.google.com/hangouts/chat/reference/message-formats/cards
-
-    Args:
-        eventMessage: the user's message to the bot
-
-    """
-
-    response = dict()
-    cards = list()
-    widgets = list()
-    header = None
-
-    words = event_message.lower().split()
-
-    for word in words:
-
-        if word == 'header':
-            header = {
-                'header': {
-                    'title': BOT_HEADER,
-                    'subtitle': 'Card header',
-                    'imageUrl': 'https://goo.gl/5obRKj',
-                    'imageStyle': 'IMAGE'
-                }
-            }
-
-        elif word == 'textparagraph':
-            widgets.append({
-                'textParagraph' : {
-                    'text': '<b>This</b> is a <i>text paragraph</i>.'
-                }
-            })
-
-        elif word == 'keyvalue':
-            widgets.append({
-                'keyValue': {
-                    'topLabel': 'KeyValue Widget',
-                    'content': 'This is a KeyValue widget',
-                    'bottomLabel': 'The bottom label',
-                    'icon': 'STAR'
-                }
-            })
-
-        elif word == 'interactivetextbutton':
-            widgets.append({
-                'buttons': [
-                    {
-                        'textButton': {
-                            'text': 'INTERACTIVE BUTTON',
-                            'onClick': {
-                                'action': {
-                                    'actionMethodName': INTERACTIVE_TEXT_BUTTON_ACTION,
-                                    'parameters': [{
-                                        'key': INTERACTIVE_BUTTON_PARAMETER_KEY,
-                                        'value': event_message
-                                    }]
-                                }
-                            }
-                        }
-                    }
-                ]
-            })
-
-        elif word == 'interactiveimagebutton':
-            widgets.append({
-                'buttons': [
-                    {
-                        'imageButton': {
-                            'icon': 'EVENT_SEAT',
-                            'onClick': {
-                                'action': {
-                                    'actionMethodName': INTERACTIVE_IMAGE_BUTTON_ACTION,
-                                    'parameters': [{
-                                        'key': INTERACTIVE_BUTTON_PARAMETER_KEY,
-                                        'value': event_message
-                                    }]
-                                }
-                            }
-                        }
-                    }
-                ]
-            })
-
-        elif word == 'textbutton':
-            widgets.append({
-                'buttons': [
-                    {
-                        'textButton': {
-                            'text': 'TEXT BUTTON',
-                            'onClick': {
-                                'openLink': {
-                                    'url': 'https://developers.google.com',
-                                }
-                            }
-                        }
-                    }
-                ]
-            })
-
-        elif word == 'imagebutton':
-            widgets.append({
-                'buttons': [
-                    {
-                        'imageButton': {
-                            'icon': 'EVENT_SEAT',
-                            'onClick': {
-                                'openLink': {
-                                    'url': 'https://developers.google.com',
-                                }
-                            }
-                        }
-                    }
-                ]
-            })
-
-        elif word == 'image':
-            widgets.append({
-                'image': {
-                    'imageUrl': 'https://goo.gl/Bpa3Y5',
-                    'onClick': {
-                        'openLink': {
-                            'url': 'https://developers.google.com'
-                        }
-                    }
-                }
-            })
+    message = Message()
+    message.add_card(
+        Card(
+            Section(
+                TextParagraph('Timesheet updated sucessfully 🎉'),
+                ButtonList(
+                    TextButton(text="VIEW ON TIMESHEETS.COM.AU").add_link('https://timesheets.com.au/login.asp')))))
+    return message.output()
 
 
-
-    if header != None:
-        cards.append(header)
-
-    cards.append({ 'sections': [{ 'widgets': widgets }]})
-    response['cards'] = cards
-
-    return response
-
-
-def respond_to_interactive_card_click(action_name, custom_params):
-    """Creates a response for when the user clicks on an interactive card.
-
-    See the guide for creating interactive cards
-    https://developers.google.com/hangouts/chat/how-tos/cards-onclick
-
-    Args:
-        action_name: the name of the custom action defined in the original bot response
-        custom_params: the parameters defined in the original bot response
-
-    """
-    message = 'You clicked {}'.format(
-        'a text button' if action_name == INTERACTIVE_TEXT_BUTTON_ACTION
-            else 'an image button')
-
-    original_message = ""
-
-    if custom_params[0]['key'] == INTERACTIVE_BUTTON_PARAMETER_KEY:
-        original_message = custom_params[0]['value']
-    else:
-        original_message = '<i>Cannot determine original message</i>'
-
-    # If you want to respond to the same room but with a new message,
-    # change the following value to NEW_MESSAGE.
-    action_response = 'UPDATE_MESSAGE'
-
-    return {
-        'actionResponse': {
-            'type': action_response
-        },
-        'cards': [
-            {
-                'header': {
-                    'title': BOT_HEADER,
-                    'subtitle': 'Interactive card clicked',
-                    'imageUrl': 'https://goo.gl/5obRKj',
-                    'imageStyle': 'IMAGE'
-                }
-            },
-            {
-                'sections': [
-                    {
-                        'widgets': [
-                            {
-                                'textParagraph': {
-                                    'text': message
-                                }
-                            },
-                            {
-                                'keyValue': {
-                                    'topLabel': 'Original message',
-                                    'content': original_message
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    }
+def create_card_response(text):
+    message = Message()
+    message.add_card(
+        Card(
+            Section(
+                TextParagraph(text)
+            ),
+            Section(
+                ButtonList(
+                    TextButton(text="SHOW MENU").add_action(ActionMethod.HELP)))))
+    return message.output()
