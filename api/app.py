@@ -262,9 +262,9 @@ def warming_sqs_lambda_functions(event):
     payload = {
         "warming": True
     }
-    utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_name"], message=payload)
-    utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_name"], message=payload)
-    utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_name"], message=payload)
+    utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_id"], message=payload)
+    utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=payload)
+    utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=payload)
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_chat_name"])
