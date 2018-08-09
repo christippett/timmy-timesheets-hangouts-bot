@@ -271,58 +271,56 @@ def warming_sqs_lambda_functions(event):
 def sqs_chat_handler(sqs_event):
     for record in sqs_event:
         payload = json.loads(record.body)
-        warming = payload.get("warming")
-        if warming:
+        if payload.get("warming"):
             logging.info("Warming up sqs_chat_handler lambda.")
-        else:
-            space_name = payload.get('space_name')
-            message = payload.get('message')
-            messages.send_async_message(message, space_name)
+            continue  # skip further processing if triggered by warmup function
+        space_name = payload.get('space_name')
+        message = payload.get('message')
+        messages.send_async_message(message, space_name)
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_process_name"])
 def sqs_process_handler(sqs_event):
     for record in sqs_event:
         event = json.loads(record.body)
-        warming = event.get("warming")
-        if warming:
+        if event.get("warming"):
             logging.info("Warming up sqs_process_handler lambda.")
-        else:
-            user_name = event['user']['name']
-            # TODO: Use a single event handler for both sync and async responses
-            if event['type'] == 'MESSAGE' and event['message']['text'].lower() in ['remind_everyone',
-                                                                                   'remind_everyone_meme']:
-                spaces = models.Space.scan()
-                for space in spaces:
-                    user = models.User.get(space.username)
-                    if event['message']['text'].lower() == 'remind_everyone':
-                        message = {
-                            'text': f"Hey {user.given_name}! Just a friendly reminder that it's time to do your timesheet 😄"}
-                    else:
-                        message = messages.create_reminder_meme()
-                    payload = {
-                        'space_name': space.name,
-                        'message': message
-                    }
-                    utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_id"], message=payload)
-            elif event['type'] == 'CARD_CLICKED':
-                action_name = event['action']['actionMethodName']
-                parameters = event['action']['parameters']
-                if action_name == messages.COPY_TIMESHEET_ACTION:
-                    start_date = None
-                    end_date = None
-                    if parameters[0]['key'] == 'start_date':
-                        start_date = dateparser(parameters[0]['value']) - timedelta(days=7)
-                    if parameters[1]['key'] == 'end_date':
-                        end_date = dateparser(parameters[1]['value']) - timedelta(days=7)
-                    if start_date is None or end_date is None:
-                        return
-                    user = models.User.get(user_name)
-                    timesheet = user.get_timesheet(start_date=start_date,
-                                                   end_date=end_date)  # TODO: Get from DynamoDB instead
-                    new_timesheet = utils.copy_timesheet(timesheet, add_days=7)
-                    api = user.get_api_and_login()
-                    api.post_timesheet(new_timesheet)
+            continue  # skip further processing if triggered by warmup function
+        user_name = event['user']['name']
+        # TODO: Use a single event handler for both sync and async responses
+        if event['type'] == 'MESSAGE' and event['message']['text'].lower() in ['remind_everyone',
+                                                                                'remind_everyone_meme']:
+            spaces = models.Space.scan()
+            for space in spaces:
+                user = models.User.get(space.username)
+                if event['message']['text'].lower() == 'remind_everyone':
+                    message = {
+                        'text': f"Hey {user.given_name}! Just a friendly reminder that it's time to do your timesheet 😄"}
+                else:
+                    message = messages.create_reminder_meme()
+                payload = {
+                    'space_name': space.name,
+                    'message': message
+                }
+                utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_id"], message=payload)
+        elif event['type'] == 'CARD_CLICKED':
+            action_name = event['action']['actionMethodName']
+            parameters = event['action']['parameters']
+            if action_name == messages.COPY_TIMESHEET_ACTION:
+                start_date = None
+                end_date = None
+                if parameters[0]['key'] == 'start_date':
+                    start_date = dateparser(parameters[0]['value']) - timedelta(days=7)
+                if parameters[1]['key'] == 'end_date':
+                    end_date = dateparser(parameters[1]['value']) - timedelta(days=7)
+                if start_date is None or end_date is None:
+                    return
+                user = models.User.get(user_name)
+                timesheet = user.get_timesheet(start_date=start_date,
+                                                end_date=end_date)  # TODO: Get from DynamoDB instead
+                new_timesheet = utils.copy_timesheet(timesheet, add_days=7)
+                api = user.get_api_and_login()
+                api.post_timesheet(new_timesheet)
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_scrape_name"])
@@ -336,39 +334,38 @@ def sqs_scrape_handler(sqs_event):
     """
     for record in sqs_event:
         payload = json.loads(record.body)
-        warming = payload.get("warming")
-        if warming:
+        if payload.get("warming"):
             logging.info("Warming up sqs_scrape_handler lambda.")
+            continue  # skip further processing if triggered by warmup function
+        username = payload["username"]
+        message_text = payload["message_text"]
+        user = models.User.get(username)
+        api = user.get_api_and_login()
+
+        if message_text in ["get_last_weeks_timesheet", "scrape_update_dynamo_db", "get_proposed_timesheet"]:
+            start_date, end_date = utils.get_week_dates(weeks=-1)
         else:
-            username = payload["username"]
-            message_text = payload["message_text"]
-            user = models.User.get(username)
-            api = user.get_api_and_login()
+            start_date, end_date = utils.get_week_dates(weeks=0)
 
-            if message_text in ["get_last_weeks_timesheet", "scrape_update_dynamo_db", "get_proposed_timesheet"]:
-                start_date, end_date = utils.get_week_dates(weeks=-1)
-            else:
-                start_date, end_date = utils.get_week_dates(weeks=0)
+        timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
+        date_entries = timesheet.date_entries()
 
-            timesheet = api.get_timesheet(start_date=start_date, end_date=end_date)
-            date_entries = timesheet.date_entries()
+        if message_text == "scrape_update_dynamo_db":
+            print(f'Looping through timesheet dates for user: {username}')
+            models.Timesheet.bulk_create_from_date_entries(user=user, date_entries=date_entries)
+            message = {"text": "Updated your work history in DyDb!!"}
+        elif message_text == "get_proposed_timesheet":
+            new_date_entries = {}
+            for date, entries in date_entries.items():
+                new_date = date + timedelta(days=7)
+                new_date_entries[new_date] = entries
+            message = messages.create_timesheet_card(
+                new_date_entries,
+                user=user,
+                title='Proposed Timesheet',
+                show_buttons=True)
+        else:
+            message = messages.create_timesheet_card(date_entries, user=user)
 
-            if message_text == "scrape_update_dynamo_db":
-                print(f'Looping through timesheet dates for user: {username}')
-                models.Timesheet.bulk_create_from_date_entries(user=user, date_entries=date_entries)
-                message = {"text": "Updated your work history in DyDb!!"}
-            elif message_text == "get_proposed_timesheet":
-                new_date_entries = {}
-                for date, entries in date_entries.items():
-                    new_date = date + timedelta(days=7)
-                    new_date_entries[new_date] = entries
-                message = messages.create_timesheet_card(
-                    new_date_entries,
-                    user=user,
-                    title='Proposed Timesheet',
-                    show_buttons=True)
-            else:
-                message = messages.create_timesheet_card(date_entries, user=user)
-
-            space = models.Space.get_from_username(username)
-            messages.send_async_message(message, space_name=space.name)
+        space = models.Space.get_from_username(username)
+        messages.send_async_message(message, space_name=space.name)
