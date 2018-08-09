@@ -134,7 +134,8 @@ def bot_event():
             resp = messages.create_action_card()
         elif action_name == messages.ActionMethod.LOGIN.value:
             user_authenticated, resp = check_user_authenticated(event)
-            if user_authenticated:
+            if not user_authenticated:
+                return resp
             resp = {'text': "You're already authenticated 👍"}
         elif action_name == messages.ActionMethod.SHOW_THIS_WEEKS_TIMESHEET.value:
             message_body = {"username": user_name, "message_text": 'get_current_timesheet'}
