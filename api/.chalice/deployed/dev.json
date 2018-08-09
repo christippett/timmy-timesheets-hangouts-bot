@@ -1,6 +1,16 @@
 {
   "resources": [
     {
+      "name": "warming_sqs_lambda_functions",
+      "resource_type": "lambda_function",
+      "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-warming_sqs_lambda_functions"
+    },
+    {
+      "name": "warming_sqs_lambda_functions-event",
+      "resource_type": "cloudwatch_event",
+      "rule_name": "team2-timesheet-bot-dev-warming_sqs_lambda_functions-event"
+    },
+    {
       "name": "sqs_chat_handler",
       "resource_type": "lambda_function",
       "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-sqs_chat_handler"
