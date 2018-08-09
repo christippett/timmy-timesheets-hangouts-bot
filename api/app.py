@@ -136,7 +136,7 @@ def bot_event():
             user_authenticated, resp = check_user_authenticated(event)
             if not user_authenticated:
                 return resp
-            resp = {'text': "You're already authenticated 👍"}
+            resp = messages.create_card_response("You're already authenticated 👍", show_menu_button=True)
         elif action_name == messages.ActionMethod.SHOW_THIS_WEEKS_TIMESHEET.value:
             message_body = {"username": user_name, "message_text": 'get_current_timesheet'}
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
