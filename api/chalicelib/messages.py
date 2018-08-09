@@ -111,83 +111,6 @@ def create_reminder_meme():
     return message.output()
 
 
-def create_timesheet_card(date_entries, user, title='Timesheet Summary', buttons=False):
-    response = dict()
-    cards = list()
-    widgets = list()
-
-    # Create header
-    start_date = min(date_entries.keys())
-    end_date = max(date_entries.keys())
-    start_date_label = start_date.strftime('%d-%b-%Y')
-    end_date_label = end_date.strftime('%d-%b-%Y')
-    header = {
-        'header': {
-            'title': title,
-            'subtitle': f'{start_date_label} - {end_date_label}',
-            'imageUrl': user.picture,
-            'imageStyle': 'AVATAR'
-        }
-    }
-    cards.append(header)
-
-    # Loop through timesheet and construct widgets
-    for date, entries in date_entries.items():
-        date_label = date.strftime('%A, %d %B')
-        widgets.append({
-            'textParagraph' : {
-                'text': f'<b>{date_label}</b>'
-            }
-        })
-        if not entries:
-            widgets.append({
-                'keyValue': {
-                    'topLabel': 'Incomplete',
-                    'content': '0.0',
-                    'icon': 'CLOCK'
-                }
-            })
-        for entry in entries:
-            widgets.append({
-                'keyValue': {
-                    'topLabel': entry.get('customer_description'),
-                    'content': str(entry.get('hours')),
-                    'bottomLabel': entry.get('project_description'),
-                    'icon': 'CLOCK'
-                }
-            })
-    cards.append({ 'sections': [{ 'widgets': widgets }]})
-
-    if buttons:
-        button_widgets = list()
-        button_widgets.append({
-            'buttons': [
-                {
-                    'textButton': {
-                        'text': 'SAVE TIMESHEET',
-                        'onClick': {
-                            'action': {
-                                'actionMethodName': COPY_TIMESHEET_ACTION,
-                                'parameters': [{
-                                    'key': 'start_date',
-                                    'value': str(start_date)
-                                },
-                                {
-                                    'key': 'end_date',
-                                    'value': str(end_date)
-                                }]
-                            }
-                        }
-                    }
-                }
-            ]
-        })
-        cards.append({ 'sections': [{ 'widgets': button_widgets }]})
-
-    response['cards'] = cards
-    return response
-
-
 def create_timesheet_success_card():
     message = Message()
     message.add_card(
@@ -209,4 +132,47 @@ def create_card_response(text):
             Section(
                 ButtonList(
                     TextButton(text="SHOW MENU").add_action(ActionMethod.HELP)))))
+    return message.output()
+
+
+def create_timesheet_card(date_entries, user, title='Timesheet Summary', show_buttons=False):
+    start_date = min(date_entries.keys())
+    end_date = max(date_entries.keys())
+    start_date_label = start_date.strftime('%d-%b-%Y')
+    end_date_label = end_date.strftime('%d-%b-%Y')
+
+    message = Message()
+    card = Card(CardHeader(
+        title=title,
+        subtitle=f'{start_date_label} - {end_date_label}',
+        image_url=user.picture,
+        image_style=ImageStyle.AVATAR))
+
+    # Loop through timesheet and construct widget_list
+    widget_list = list()
+    for date, entries in date_entries.items():
+        date_label = date.strftime('%A, %d %B')
+        widget_list.append(TextParagraph(f'<b>{date_label}</b>'))
+        if not entries:
+            widget_list.append(KeyValue(top_label='Incomplete', content='0.0', icon=Icon.CLOCK))
+        for entry in entries:
+            widget_list.append(KeyValue(
+                top_label=entry.get('customer_description'),
+                content=str(entry.get('hours')),
+                bottom_label=entry.get('project_description'),
+                icon=Icon.CLOCK))
+    timesheet_section = Section(*widget_list)
+    card.add_section(timesheet_section)
+
+    if show_buttons:
+        action_parameters = {
+            'start_date': str(start_date),
+            'end_date': str(end_date)}
+        button_section = Section(
+            ButtonList(
+                TextButton('SAVE TIMESHEET').add_action(
+                    action_method=ActionMethod.COPY_TIMESHEET,
+                    parameters=action_parameters)))
+        card.add_section(button_section)
+    message.add_card(card)
     return message.output()

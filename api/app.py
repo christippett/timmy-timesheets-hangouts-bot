@@ -362,8 +362,11 @@ def sqs_scrape_handler(sqs_event):
                 for date, entries in date_entries.items():
                     new_date = date + timedelta(days=7)
                     new_date_entries[new_date] = entries
-                message = messages.create_timesheet_card(new_date_entries, user=user, title='Proposed Timesheet',
-                                                         buttons=True)
+                message = messages.create_timesheet_card(
+                    new_date_entries,
+                    user=user,
+                    title='Proposed Timesheet',
+                    show_buttons=True)
             else:
                 message = messages.create_timesheet_card(date_entries, user=user)
 
