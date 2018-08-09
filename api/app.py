@@ -61,7 +61,7 @@ def bot_event():
         print(f'Registered {space_name} to DynamoDB')
         # Prompt registration
         if event['space']['type'] == 'DM':
-            return messages.create_initial_card()
+            return messages.create_action_card()
 
     if event['type'] == 'MESSAGE' or (
             event['type'] == 'ADDED_TO_SPACE' and 'message' in event):
@@ -76,7 +76,7 @@ def bot_event():
             if user_authenticated:
                 resp = {'text': "You're already authenticated 👍"}
         elif message_text == 'help':
-            resp = messages.create_initial_card()
+            resp = messages.create_action_card()
         elif message_text in ['remind_everyone', 'remind_everyone_meme']:
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=event)
             resp = {'text': 'Sending a reminder to everyone!'}
@@ -123,13 +123,34 @@ def bot_event():
             else:
                 return {'text': 'You are currently not logged in.'}
         else:
-            resp = messages.create_card_response(message_text)
+            resp = messages.create_action_card()
 
     elif event['type'] == 'CARD_CLICKED':
-        utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=event)
-        resp = messages.create_timesheet_success_card()
+        action_name = event['action']['actionMethodName']
+        if action_name == messages.COPY_TIMESHEET_ACTION:
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=event)
+            resp = messages.create_timesheet_success_card()
+        elif action_name == messages.ActionMethod.HELP.value:
+            resp = messages.create_action_card()
+        elif action_name == messages.ActionMethod.LOGIN.value:
+            user_authenticated, resp = check_user_authenticated(event)
+            if user_authenticated:
+                return resp
+            resp = {'text': "You're already authenticated 👍"}
+        elif action_name == messages.ActionMethod.SHOW_THIS_WEEKS_TIMESHEET.value:
+            message_body = {"username": user_name, "message_text": 'get_current_timesheet'}
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
+            resp = messages.create_card_response("I'm off to track down this week's timesheet... ⌛")
+        elif action_name == messages.ActionMethod.SHOW_LAST_WEEKS_TIMESHEET.value:
+            message_body = {"username": user_name, "message_text": 'get_last_weeks_timesheet'}
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
+            resp = messages.create_card_response("I'm off to track down last week's timesheet... ⌛")
+        elif action_name == messages.ActionMethod.PROPOSE_TIMESHEET.value:
+            message_body = {"username": user_name, "message_text": 'get_proposed_timesheet'}
+            utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
+            resp = messages.create_card_response("Thinking cap is on! I'm off to divine this week's timesheet... ⌛")
+        # Update message instead of sending a new message
         resp['actionResponse'] = {'type': 'UPDATE_MESSAGE'}
-
     elif event['type'] == 'REMOVED_FROM_SPACE':
         # Delete space from DB
         try:
@@ -143,6 +164,27 @@ def bot_event():
 
     logging.info(resp)
     return resp
+
+
+@app.route('/debug/message', methods=['POST'])
+def debug_message():
+    """
+        Forward messages received to this endpoint to the user matching the
+        email address in the header
+    """
+    request = app.current_request
+    data = request.json_body
+    email = request.headers.get('USER_EMAIL')
+    try:
+        space = models.Space.get_from_email(email)
+        payload = {
+            'space_name': space.name,
+            'message': data
+        }
+        utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_id"], message=payload)
+        return {'success': 'Message sent'}
+    except Exception as e:
+        return {'error': str(e)}
 
 
 @app.route('/auth/callback')

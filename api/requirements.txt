@@ -1,6 +1,7 @@
 chalice
 pynamodb
 ssm-parameter-store
+hangouts-helper
 cryptography
 requests
 timepro-timesheet
