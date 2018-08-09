@@ -177,8 +177,8 @@ def timepro_config():
         user_register = models.UserRegister(
             username,
             timepro_username=data['username'],
-            timepro_password=data['password'],
             timepro_customer=data['customer'])
+        user_register.timepro_password = data['password']
         user_register.save()
     except api.LoginError as e:
         return Response(body={'error': str(e)}, status_code=403)

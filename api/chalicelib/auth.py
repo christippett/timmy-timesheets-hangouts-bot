@@ -31,7 +31,7 @@ PEOPLE_API_SCOPES = [
 # Get client secret JSON from environment (populated from SSM)
 get_client_secret = lambda: json.loads(
     os.environ.get('google_auth_client_secret'))
-get_cipher_key = lambda: os.environ.get('oath_cipher_key', 'lg8263QX230evwtY0k5ZQzho2Lf9jjqFxQpP4Hk-lXQ=').encode('utf-8')
+get_cipher_key = lambda: os.environ.get('oauth_cipher_key', 'lg8263QX230evwtY0k5ZQzho2Lf9jjqFxQpP4Hk-lXQ=').encode('utf-8')
 
 
 class OAuth2CallbackCipher(object):
@@ -43,18 +43,23 @@ class OAuth2CallbackCipher(object):
         return Fernet(cls.key)
 
     @classmethod
-    def encrypt(cls, args: dict) -> str:
-        # Produce JSON payload, padded to multiple of 16 bytes.
-        json_str = json.dumps(args)
-        json_str = json_str.ljust(-(-len(json_str) // 16) * 16)
+    def encrypt(cls, args: dict, pword: str = None) -> str:
+
+        if not pword:
+            # Produce JSON payload, padded to multiple of 16 bytes.
+            str_to_encrypt = json.dumps(args)
+        else:
+            str_to_encrypt = pword
+
+        str_to_encrypt = str_to_encrypt.ljust(-(-len(str_to_encrypt) // 16) * 16)
         return base64.b64encode(
-            cls.get_cipher().encrypt(json_str.encode('utf-8')))
+            cls.get_cipher().encrypt(str_to_encrypt.encode('utf-8')))
 
     @classmethod
-    def decrypt(cls, encrypted_args: str) -> dict:
-        return json.loads(
-            cls.get_cipher().decrypt(
-                base64.b64decode(encrypted_args)).rstrip().decode('utf-8'))
+    def decrypt(cls, encrypted_args: str, pword: bool = False) -> dict:
+        decrypted = cls.get_cipher().decrypt(
+            base64.b64decode(encrypted_args)).rstrip().decode('utf-8')
+        return decrypted if pword else json.loads(decrypted)
 
 
 def get_authorization_url(event: dict, request):

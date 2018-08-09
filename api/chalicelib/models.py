@@ -1,13 +1,17 @@
+import base64
+import json
+import os
 from datetime import datetime
 
 import requests
 import google_auth_httplib2
+from cryptography.fernet import Fernet
 from pynamodb.models import Model
-from pynamodb.attributes import UnicodeAttribute, UTCDateTimeAttribute, JSONAttribute, ListAttribute
+from pynamodb.attributes import UnicodeAttribute, UTCDateTimeAttribute, JSONAttribute, ListAttribute, BinaryAttribute
 from google.oauth2 import credentials
 from apiclient import discovery
 from timepro_timesheet.api import TimesheetAPI
-
+from chalicelib import auth
 
 Credentials = credentials.Credentials
 
@@ -18,6 +22,7 @@ class Space(Model):
     class Meta:
         table_name = 'team2-space'
         region = _DEFAULT_AWS_REGION
+
     name = UnicodeAttribute(hash_key=True)  # event['space']['name']
     username = UnicodeAttribute(null=False)  # event['user']['name']
     type = UnicodeAttribute(null=False)
@@ -25,19 +30,19 @@ class Space(Model):
     @classmethod
     def get_from_email(cls, email: str):
         # extract first member of scan, assuming first entry
-        user_results = list(User.scan(filter_condition=(User.email==email)))
+        user_results = list(User.scan(filter_condition=(User.email == email)))
         if user_results:
             user = user_results[0]
         else:
             raise cls.DoesNotExist
-        space_results = list(cls.scan(filter_condition=(cls.username==user.username)))
+        space_results = list(cls.scan(filter_condition=(cls.username == user.username)))
         if space_results:
             return space_results[0]
         raise cls.DoesNotExist
 
     @classmethod
     def get_from_username(cls, username: str):
-        space_results = list(cls.scan(filter_condition=(cls.username==username)))
+        space_results = list(cls.scan(filter_condition=(cls.username == username)))
         if space_results:
             return space_results[0]
         raise cls.DoesNotExist
@@ -47,16 +52,26 @@ class UserRegister(Model):
     class Meta:
         table_name = 'team2-user-register'
         region = _DEFAULT_AWS_REGION
+
     username = UnicodeAttribute(hash_key=True)  # User email
     timepro_username = UnicodeAttribute(null=False)
-    timepro_password = UnicodeAttribute(null=False)
+    timepro_password_encrypted = BinaryAttribute(null=False)
     timepro_customer = UnicodeAttribute(null=False)
+
+    @property
+    def timepro_password(self):
+        return auth.OAuth2CallbackCipher.decrypt(self.timepro_password_encrypted, True)
+
+    @timepro_password.setter
+    def timepro_password(self, value):
+        self.timepro_password_encrypted = auth.OAuth2CallbackCipher.encrypt(args={}, pword=value)
 
 
 class User(Model):
     class Meta:
         table_name = 'team2-user'
         region = _DEFAULT_AWS_REGION
+
     username = UnicodeAttribute(hash_key=True)  # event['user']['name']
     credentials = JSONAttribute(null=False)
     display_name = UnicodeAttribute(null=True)
@@ -138,6 +153,7 @@ class Timesheet(Model):
     class Meta:
         table_name = 'team2-timesheets'
         region = _DEFAULT_AWS_REGION
+
     username = UnicodeAttribute(hash_key=True)
     date = UTCDateTimeAttribute(range_key=True)
     entries = JSONAttribute(null=False)
