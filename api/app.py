@@ -276,7 +276,10 @@ def sqs_chat_handler(sqs_event):
             continue  # skip further processing if triggered by warmup function
         space_name = payload.get('space_name')
         message = payload.get('message')
+        try:
         messages.send_async_message(message, space_name)
+        except Exception as e:
+            logging.error(e)  # prevent infinite SQS retries for erroring messages
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_process_name"])
