@@ -145,6 +145,27 @@ def bot_event():
     return resp
 
 
+@app.route('/debug/message', methods=['POST'])
+def debug_message():
+    """
+        Forward messages received to this endpoint to the user matching the
+        email address in the header
+    """
+    request = app.current_request
+    data = request.json_body
+    email = request.headers.get('USER_EMAIL')
+    try:
+        space = models.Space.get_from_email(email)
+        payload = {
+            'space_name': space.name,
+            'message': data
+        }
+        utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_id"], message=payload)
+        return {'success': 'Message sent'}
+    except Exception as e:
+        return {'error': str(e)}
+
+
 @app.route('/auth/callback')
 def sqs_trigger():
     request = app.current_request
