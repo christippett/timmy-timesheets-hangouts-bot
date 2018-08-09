@@ -1,17 +1,13 @@
-import base64
-import json
-import os
 from datetime import datetime
 
-import requests
 import google_auth_httplib2
-from cryptography.fernet import Fernet
-from pynamodb.models import Model
-from pynamodb.attributes import UnicodeAttribute, UTCDateTimeAttribute, JSONAttribute, ListAttribute, BinaryAttribute
-from google.oauth2 import credentials
+import requests
 from apiclient import discovery
+from google.oauth2 import credentials
+from pynamodb.attributes import UnicodeAttribute, UTCDateTimeAttribute, JSONAttribute, BinaryAttribute
+from pynamodb.models import Model
 from timepro_timesheet.api import TimesheetAPI
-from chalicelib import auth
+from . import auth
 
 Credentials = credentials.Credentials
 

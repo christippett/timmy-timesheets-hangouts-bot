@@ -5,11 +5,9 @@ encrypt user information passed through the state parameter.
 """
 
 import base64
+import json
 import logging
 import os
-import time
-import json
-from typing import Union
 
 import requests
 from cryptography.fernet import Fernet
