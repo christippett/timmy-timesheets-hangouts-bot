@@ -7,6 +7,7 @@ from google.oauth2 import credentials
 from pynamodb.attributes import UnicodeAttribute, UTCDateTimeAttribute, JSONAttribute, BinaryAttribute
 from pynamodb.models import Model
 from timepro_timesheet.api import TimesheetAPI
+
 from . import auth
 
 Credentials = credentials.Credentials
