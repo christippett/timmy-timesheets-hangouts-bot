@@ -61,7 +61,7 @@ def bot_event():
         print(f'Registered {space_name} to DynamoDB')
         # Prompt registration
         if event['space']['type'] == 'DM':
-            return messages.create_action_card()
+            return {'text': 'Hey, thanks for adding me 🎉! Type **help** to get started...'}
 
     if event['type'] == 'MESSAGE' or (
             event['type'] == 'ADDED_TO_SPACE' and 'message' in event):
@@ -74,7 +74,7 @@ def bot_event():
         if message_text == 'login':
             user_authenticated, resp = check_user_authenticated(event)
             if user_authenticated:
-                resp = {'text': "You're already authenticated 👍"}
+                resp = messages.create_card_response("You're already authenticated 👍", show_menu_button=True)
         elif message_text == 'help':
             resp = messages.create_action_card()
         elif message_text in ['remind_everyone', 'remind_everyone_meme']:
@@ -127,16 +127,11 @@ def bot_event():
 
     elif event['type'] == 'CARD_CLICKED':
         action_name = event['action']['actionMethodName']
-        if action_name == messages.COPY_TIMESHEET_ACTION:
+        if action_name == messages.ActionMethod.COPY_TIMESHEET.value:
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_process_id"], message=event)
             resp = messages.create_timesheet_success_card()
         elif action_name == messages.ActionMethod.HELP.value:
             resp = messages.create_action_card()
-        elif action_name == messages.ActionMethod.LOGIN.value:
-            user_authenticated, resp = check_user_authenticated(event)
-            if not user_authenticated:
-                return resp
-            resp = messages.create_card_response("You're already authenticated 👍", show_menu_button=True)
         elif action_name == messages.ActionMethod.SHOW_THIS_WEEKS_TIMESHEET.value:
             message_body = {"username": user_name, "message_text": 'get_current_timesheet'}
             utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_scrape_id"], message=message_body)
@@ -276,10 +271,7 @@ def sqs_chat_handler(sqs_event):
             continue  # skip further processing if triggered by warmup function
         space_name = payload.get('space_name')
         message = payload.get('message')
-        try:
         messages.send_async_message(message, space_name)
-        except Exception as e:
-            logging.error(e)  # prevent infinite SQS retries for erroring messages
 
 
 @app.on_sqs_message(queue=SQS_PARAMETERS["sqs_queue_process_name"])
@@ -291,8 +283,7 @@ def sqs_process_handler(sqs_event):
             continue  # skip further processing if triggered by warmup function
         user_name = event['user']['name']
         # TODO: Use a single event handler for both sync and async responses
-        if event['type'] == 'MESSAGE' and event['message']['text'].lower() in ['remind_everyone',
-                                                                                'remind_everyone_meme']:
+        if event['type'] == 'MESSAGE' and event['message']['text'].lower() in ['remind_everyone', 'remind_everyone_meme']:
             spaces = models.Space.scan()
             for space in spaces:
                 user = models.User.get(space.username)
@@ -309,7 +300,7 @@ def sqs_process_handler(sqs_event):
         elif event['type'] == 'CARD_CLICKED':
             action_name = event['action']['actionMethodName']
             parameters = event['action']['parameters']
-            if action_name == messages.COPY_TIMESHEET_ACTION:
+            if action_name == messages.ActionMethod.COPY_TIMESHEET.value:
                 start_date = None
                 end_date = None
                 if parameters[0]['key'] == 'start_date':
@@ -319,8 +310,9 @@ def sqs_process_handler(sqs_event):
                 if start_date is None or end_date is None:
                     return
                 user = models.User.get(user_name)
-                timesheet = user.get_timesheet(start_date=start_date,
-                                                end_date=end_date)  # TODO: Get from DynamoDB instead
+                timesheet = user.get_timesheet(
+                    start_date=start_date,
+                    end_date=end_date)  # TODO: Get from DynamoDB instead
                 new_timesheet = utils.copy_timesheet(timesheet, add_days=7)
                 api = user.get_api_and_login()
                 api.post_timesheet(new_timesheet)
@@ -359,8 +351,8 @@ def sqs_scrape_handler(sqs_event):
             message = {"text": "Updated your work history in DyDb!!"}
         elif message_text == "get_proposed_timesheet":
             new_date_entries = {}
-            for date, entries in date_entries.items():
-                new_date = date + timedelta(days=7)
+            for dt, entries in date_entries.items():
+                new_date = dt + timedelta(days=7)
                 new_date_entries[new_date] = entries
             message = messages.create_timesheet_card(
                 new_date_entries,
