@@ -122,16 +122,13 @@ def create_timesheet_success_card():
     return message.output()
 
 
-def create_card_response(text):
+def create_card_response(text, show_menu_button=False, button_label="BACK"):
     message = Message()
-    message.add_card(
-        Card(
-            Section(
-                TextParagraph(text)
-            ),
-            Section(
-                ButtonList(
-                    TextButton(text="SHOW MENU").add_action(ActionMethod.HELP)))))
+    card = Card(Section(TextParagraph(text)))
+    if show_menu_button:
+        card.add_section(
+            Section(ButtonList(TextButton(button_label).add_action(ActionMethod.HELP))))
+    message.add_card(card)
     return message.output()
 
 
