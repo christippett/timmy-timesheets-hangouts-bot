@@ -73,10 +73,6 @@ def create_action_card():
                 image_style=ImageStyle.AVATAR),
             Section(
                 ButtonList(
-                    TextButton(text="LOGIN").add_action(ActionMethod.LOGIN)),
-                TextParagraph("Login and configure integration with TimePro")),
-            Section(
-                ButtonList(
                     TextButton(text="VIEW LAST WEEK'S TIMESHEET").add_action(
                         action_method=ActionMethod.SHOW_LAST_WEEKS_TIMESHEET,
                         parameters={'start_date': str(this_week_start), 'end_date': str(this_week_end)})),

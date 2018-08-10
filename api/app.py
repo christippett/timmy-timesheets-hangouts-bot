@@ -61,7 +61,7 @@ def bot_event():
         print(f'Registered {space_name} to DynamoDB')
         # Prompt registration
         if event['space']['type'] == 'DM':
-            return {'text': 'Hey, thanks for adding me 🎉! Type **help** to get started...'}
+            return {'text': 'Hey, thanks for adding me 🎉! Type *help* to get started...'}
 
     if event['type'] == 'MESSAGE' or (
             event['type'] == 'ADDED_TO_SPACE' and 'message' in event):
@@ -222,13 +222,13 @@ def timepro_config():
     except Exception as e:
         return Response(body={'error': 'An error occured when validating TimePro credentials'}, status_code=400)
     # Send async success message
-    space = models.Space.get_from_username(username)
-    payload = {
-        'space_name': space.name,
-        'message': {
-            'text': "You're authenticated and your TimePro credentials have been configured. You're on fire! 🔥"}
-    }
-    utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_id"], message=payload)
+    # space = models.Space.get_from_username(username)
+    # payload = {
+    #     'space_name': space.name,
+    #     'message': {
+    #         'text': "You're authenticated and your TimePro credentials have been configured. You're on fire! 🔥"}
+    # }
+    # utils.sqs_send_message(queue_url=SQS_PARAMETERS["sqs_queue_chat_id"], message=payload)
     return request.json_body
 
 
