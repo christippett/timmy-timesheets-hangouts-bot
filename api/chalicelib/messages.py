@@ -167,5 +167,9 @@ def create_timesheet_card(date_entries, user, title='Timesheet Summary', show_bu
                     action_method=ActionMethod.COPY_TIMESHEET,
                     parameters=action_parameters)))
         card.add_section(button_section)
+    back_button = Section(
+        ButtonList(
+            TextButton('BACK').add_action(ActionMethod.HELP)))
+    card.add_section(back_button)
     message.add_card(card)
     return message.output()
