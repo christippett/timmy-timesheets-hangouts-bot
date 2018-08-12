@@ -36,6 +36,7 @@ def get_parameters():
 
 DEBUG = True
 PARAMETERS = get_parameters()
+GOOGLE_SERVICE_ACCOUNT_INFO = PARAMETERS.get('google_auth_service_account')
 SQS_PARAMETERS = PARAMETERS.get('sqs_parameters')
 
 # Initiate app
@@ -56,7 +57,10 @@ def index():
 @app.route('/bot', methods=['POST'])
 def bot_event():
     """Handler for events from Hangouts Chat."""
-    timmy = bot.TimmySyncHandler(parameters=PARAMETERS, debug=DEBUG)
+    timmy = bot.TimmySyncHandler(
+        parameters=PARAMETERS,
+        service_account_info=GOOGLE_SERVICE_ACCOUNT_INFO,
+        debug=DEBUG)
     event = app.current_request.json_body
     return timmy.handle_chat_event(event)
 
@@ -146,7 +150,10 @@ def sqs_process_handler(sqs_event):
         if event.get("warming"):
             logging.info("Warming up sqs_process_handler lambda.")
             continue  # skip further processing if triggered by warmup function
-        timmy = bot.TimmyAsyncHandler(parameters=PARAMETERS, debug=DEBUG)
+        timmy = bot.TimmyAsyncHandler(
+            parameters=PARAMETERS,
+            service_account_info=GOOGLE_SERVICE_ACCOUNT_INFO,
+            debug=DEBUG)
         return timmy.handle_chat_event(event)
 
 
@@ -159,7 +166,7 @@ def sqs_chat_handler(sqs_event):
             continue  # skip further processing if triggered by warmup function
         space_name = payload.get('space_name')
         message = payload.get('message')
-        chat = HangoutsChatAPI(PARAMETERS.get('google_auth_service_account'))
+        chat = HangoutsChatAPI(GOOGLE_SERVICE_ACCOUNT_INFO)
         chat.create_message(message, space_name)
 
 

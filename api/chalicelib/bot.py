@@ -27,9 +27,8 @@ class ActionMethod(Enum):
 class TimmyBaseHandler(HangoutsChatHandler):
     ActionMethod = ActionMethod
 
-    def __init__(self, parameters={}, *args, **kwargs):
+    def __init__(self, parameters={}, service_account_info=None, *args, **kwargs):
         self.parameters = parameters
-        service_account_info = parameters.get('google_auth_service_account')
         self.chat = HangoutsChatAPI(service_account_info)
         super().__init__(*args, **kwargs)
 
