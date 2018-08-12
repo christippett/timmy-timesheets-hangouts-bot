@@ -109,6 +109,7 @@ def logout(user_name: str):
 def on_oauth2_callback(request):
     """Handles the OAuth callback."""
     state = request.query_params.get('state')
+    code = request.query_params.get('code')
     oauth2_callback_args = OAuth2CallbackCipher.decrypt(state)
     user_name, redirect_url = (
         oauth2_callback_args['user_name'],
@@ -120,7 +121,7 @@ def on_oauth2_callback(request):
         redirect_uri=callback_url,
         state=state
     )
-    oauth2_flow.fetch_token(authorization_response=utils.get_current_url(request, params=True))
+    oauth2_flow.fetch_token(code=code)
     logging.warning(oauth2_flow.credentials.id_token)
     user = models.User(user_name)
     user.put_credentials(oauth2_flow.credentials)
