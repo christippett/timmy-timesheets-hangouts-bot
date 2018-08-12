@@ -1,14 +1,17 @@
 {
   "resources": [
     {
-      "name": "warming_sqs_lambda_functions",
+      "name": "sqs_process_handler",
       "resource_type": "lambda_function",
-      "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-warming_sqs_lambda_functions"
+      "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-sqs_process_handler"
     },
     {
-      "name": "warming_sqs_lambda_functions-event",
-      "resource_type": "cloudwatch_event",
-      "rule_name": "team2-timesheet-bot-dev-warming_sqs_lambda_functions-event"
+      "name": "sqs_process_handler-sqs-event-source",
+      "resource_type": "sqs_event",
+      "queue_arn": "arn:aws:sqs:ap-southeast-2:204449496694:team2-sqs-process",
+      "event_uuid": "7b21cb18-1cf4-481c-aca9-37af94fcce34",
+      "queue": "team2-sqs-process",
+      "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-sqs_process_handler"
     },
     {
       "name": "sqs_chat_handler",
@@ -24,17 +27,14 @@
       "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-sqs_chat_handler"
     },
     {
-      "name": "sqs_process_handler",
+      "name": "warming_sqs_lambda_functions",
       "resource_type": "lambda_function",
-      "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-sqs_process_handler"
+      "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-warming_sqs_lambda_functions"
     },
     {
-      "name": "sqs_process_handler-sqs-event-source",
-      "resource_type": "sqs_event",
-      "queue_arn": "arn:aws:sqs:ap-southeast-2:204449496694:team2-sqs-process",
-      "event_uuid": "7b21cb18-1cf4-481c-aca9-37af94fcce34",
-      "queue": "team2-sqs-process",
-      "lambda_arn": "arn:aws:lambda:ap-southeast-2:204449496694:function:team2-timesheet-bot-dev-sqs_process_handler"
+      "name": "warming_sqs_lambda_functions-event",
+      "resource_type": "cloudwatch_event",
+      "rule_name": "team2-timesheet-bot-dev-warming_sqs_lambda_functions-event"
     },
     {
       "name": "sqs_scrape_handler",
