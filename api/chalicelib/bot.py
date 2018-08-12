@@ -145,9 +145,9 @@ class TimmyAsyncHandler(TimmyBaseHandler):
             for space in spaces:
                 user = models.User.get(space.username)
                 if message_text == 'remind_everyone':
-                    message = Message(
+                    message = Message(text=(
                         f"Hey {user.given_name}! Just a friendly reminder "
-                        "that it's time to do your timesheet 😄").output()
+                        "that it's time to do your timesheet 😄")).output()
                 elif message_text == 'remind_everyone_meme':
                     message = MessageTemplate.reminder_meme().output()
                 self.chat.create_message(message=message, space_name=space.name)
