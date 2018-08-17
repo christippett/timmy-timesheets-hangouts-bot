@@ -1,7 +1,7 @@
 Timmy Timesheets
 ================
 
-![Timmy](docs/hero.png)
+<img src="docs/hero.png" width="480">
 
 Timmy Timesheets is a Hangouts Chat bot (for now) that automatically reminds Servian consultants to submit their timesheet.
 
