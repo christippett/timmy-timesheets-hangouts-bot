@@ -12,7 +12,7 @@
     "upload": "aws s3 cp dist/ s3://team2-website-servian/ --recursive"
   },
   "dependencies": {
-    "buefy": "^0.6.6",
+    "buefy": "^0.7.2",
     "vue": "^2.5.2",
     "vue-resource": "^1.5.1",
     "vue-router": "^3.0.1"
